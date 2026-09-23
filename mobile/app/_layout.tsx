@@ -8,7 +8,7 @@ import { Stack, useGlobalSearchParams, usePathname } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
 import * as Notifications from 'expo-notifications'
-import { colors } from '../src/theme/mobile-theme'
+import { colors, isLightTheme } from '../src/theme/mobile-theme'
 import { OrcaLogo } from '../src/components/OrcaLogo'
 import { RpcClientProvider } from '../src/transport/client-context'
 import { getNotificationNavigationTarget } from '../src/notifications/notification-routing'
@@ -166,7 +166,7 @@ export default function RootLayout() {
   return (
     <RpcClientProvider>
       <View style={styles.root} onLayout={onNavigatorLayout}>
-        <StatusBar style="light" />
+        <StatusBar style={isLightTheme ? 'dark' : 'light'} />
         <Stack
           screenOptions={{
             headerStyle: { backgroundColor: colors.bgPanel },

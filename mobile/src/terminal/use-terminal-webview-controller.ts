@@ -3,6 +3,7 @@ import { readTerminalCellBox, type TerminalCellBox } from './terminal-cell-box'
 import { fitDimensionsFromCell } from './terminal-grid-fit'
 import type {
   TerminalInit,
+  MobileTerminalTheme,
   TerminalWebViewHandle,
   TerminalWebViewProps
 } from './terminal-webview-contract'
@@ -14,6 +15,10 @@ import { dispatchTerminalWebViewNotification } from './terminal-webview-notifica
 import { routeTerminalQueryReply } from './terminal-webview-query-reply-routing'
 import { useTerminalWebViewReadyPromises } from './terminal-webview-ready-promises'
 import { createTerminalWriteCoalescer } from './terminal-write-coalescer'
+import { isLightTheme } from '../theme/mobile-theme'
+import { LIGHT_TERMINAL_THEME } from './terminal-webview-html/theme'
+
+const LIGHT_TERMINAL_THEME_PAYLOAD: MobileTerminalTheme = { mode: 'light', theme: LIGHT_TERMINAL_THEME }
 
 /**
  * Everything `TerminalWebView` does that is not about `react-native-webview`.
@@ -51,7 +56,7 @@ export function useTerminalWebViewController(
   transport: TerminalWebViewTransport
 ) {
   const {
-    terminalTheme,
+    terminalTheme: hostTerminalTheme,
     textScale = 1,
     onWebReady,
     onEngineError,
@@ -70,6 +75,9 @@ export function useTerminalWebViewController(
     onCellBoxChange
   } = props
   const { pingsOnForegroundRecovery, post } = transport
+  // Why override the desktop's theme: the host publishes its own (usually dark) terminal theme,
+  // which would leave a black terminal inside an otherwise light app — unusable on e-ink.
+  const terminalTheme = isLightTheme ? LIGHT_TERMINAL_THEME_PAYLOAD : hostTerminalTheme
   const isWebReadyRef = useRef(false)
   const pendingMessages = useMemo(() => createTerminalWebViewPendingMessages(), [])
   const messageIdRef = useRef(0)

@@ -168,7 +168,10 @@ export const customKeyModalStyles = StyleSheet.create({
     fontFamily: typography.monoFamily
   },
   chipGlyphSelected: {
-    color: 'rgba(10,10,10,0.5)'
+    // Why bgBase at half opacity: the selected chip is filled with textPrimary, so the glyph
+    // must invert with the palette rather than stay a fixed near-black.
+    color: colors.bgBase,
+    opacity: 0.5
   },
   moreLink: {
     paddingVertical: spacing.sm,
