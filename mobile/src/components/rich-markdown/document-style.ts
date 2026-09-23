@@ -17,6 +17,8 @@ import { TEXT_INPUT_FONT_SIZE } from '../../platform/text-input-font-size'
 export function richMarkdownEditorStyle(): string {
   return `    :root {
       color-scheme: dark;
+      /* Why: one knob the toolbar/pinch write and the editor's font-size reads, so every block scales together. */
+      --markdown-text-scale: 1;
       --background: ${colors.bgBase};
       --editor-surface: ${colors.bgBase};
       --foreground: ${colors.textPrimary};
@@ -44,7 +46,7 @@ export function richMarkdownEditorStyle(): string {
       min-height: 100vh;
       padding: 18px 16px 112px;
       outline: none;
-      font-size: ${TEXT_INPUT_FONT_SIZE}px;
+      font-size: calc(${TEXT_INPUT_FONT_SIZE}px * var(--markdown-text-scale));
       line-height: 1.7;
       word-wrap: break-word;
       overflow-wrap: anywhere;
