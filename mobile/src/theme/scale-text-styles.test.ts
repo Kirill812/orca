@@ -19,10 +19,12 @@ describe('scaleTextStyles', () => {
       {
         tab: { height: 36, paddingHorizontal: 8 },
         icon: { width: 36, height: 36 },
-        rule: { height: 1 }
+        rule: { height: 1 },
+        strip: { maxHeight: 36 }
       },
       1.3
     )
+    expect(out.strip).toEqual({ maxHeight: 47 })
     expect(out.tab).toEqual({ minHeight: 36, paddingHorizontal: 8 })
     expect(out.icon).toEqual({ width: 36, height: 36 })
     expect(out.rule).toEqual({ height: 1 })
