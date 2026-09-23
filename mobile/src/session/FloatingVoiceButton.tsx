@@ -15,6 +15,7 @@ import {
   floatingVoiceButtonDiameter,
   isFloatingVoiceButtonDragTap,
   normalizeFloatingVoiceButtonPosition,
+  resolveFloatingVoiceRelease,
   type FloatingVoiceButtonPoint
 } from './floating-voice-button-geometry'
 
@@ -163,35 +164,46 @@ function FloatingVoiceButtonDraggable({
         })
       )
     })
-    .onEnd((e) => {
+    // Why onFinalize, not onEnd: RNGH only calls onEnd when the Pan ACTIVATED
+    // (~10px of movement) — a stationary tap or hold-press never activates, so
+    // onEnd (and therefore onTap/onPressOut) silently never ran. onFinalize runs
+    // for every touch end, activated or not, and also on a cancelled gesture —
+    // which a hold-mode release must see too, or dictation is left stuck recording.
+    .onFinalize((e) => {
       if (longPressTimer.current) {
         clearTimeout(longPressTimer.current)
         longPressTimer.current = null
       }
-      const tap = isFloatingVoiceButtonDragTap(e.translationX, e.translationY)
-      if (tap) {
-        // Snap back exactly — a tap shouldn't nudge the button from jitter.
-        if (dragStart.current) {
-          setPos(dragStart.current)
+      const dragged = !isFloatingVoiceButtonDragTap(e.translationX, e.translationY)
+      if (dragged) {
+        if (posRef.current) {
+          void saveFloatingVoiceButtonPosition(
+            normalizeFloatingVoiceButtonPosition({
+              x: posRef.current.x,
+              y: posRef.current.y,
+              containerWidth: containerSize.width,
+              containerHeight: containerSize.height
+            })
+          )
         }
-        if (!disabled && mode !== 'hold') {
-          if (heldLongEnough.current && (active || processing) && onLongPressCancel) {
-            onLongPressCancel()
-          } else {
-            onTap()
-          }
-        }
-      } else if (posRef.current) {
-        void saveFloatingVoiceButtonPosition(
-          normalizeFloatingVoiceButtonPosition({
-            x: posRef.current.x,
-            y: posRef.current.y,
-            containerWidth: containerSize.width,
-            containerHeight: containerSize.height
-          })
-        )
+      } else if (dragStart.current) {
+        // Snap back exactly — a tap/hold-press shouldn't nudge the button from jitter.
+        setPos(dragStart.current)
       }
-      if (mode === 'hold' && !disabled) {
+      const action = resolveFloatingVoiceRelease({
+        dx: e.translationX,
+        dy: e.translationY,
+        mode,
+        disabled,
+        heldLongEnough: heldLongEnough.current,
+        active,
+        processing
+      })
+      if (action === 'tap') {
+        onTap()
+      } else if (action === 'cancel') {
+        onLongPressCancel?.()
+      } else if (action === 'pressOut') {
         onPressOut?.()
       }
       dragStart.current = null

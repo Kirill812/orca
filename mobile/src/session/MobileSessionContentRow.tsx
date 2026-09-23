@@ -29,6 +29,8 @@ export function MobileSessionContentRow({ controller }: { controller: MobileSess
     dictation,
     dictationMode,
     canSend,
+    showNativeChat,
+    chatInputSendable,
     handleDictationToggle,
     handleDictationPressIn,
     handleDictationPressOut,
@@ -64,11 +66,9 @@ export function MobileSessionContentRow({ controller }: { controller: MobileSess
           mode={dictationMode}
           active={dictation.isRecording || dictation.isStarting}
           processing={dictation.isProcessing}
-          // ponytail: proxies both screens' disabled state off the terminal's
-          // canSend; the Chat UI composer's own lock reason isn't consulted.
-          // Upgrade if a disconnected chat session needs the floating button
-          // disabled independently of the terminal dock's send gate.
-          disabled={!canSend}
+          // Chat UI has its own send gate (lease + connection); the terminal
+          // dock's canSend only applies while the terminal is the active view.
+          disabled={showNativeChat ? !chatInputSendable : !canSend}
           onTap={handleDictationToggle}
           onPressIn={handleDictationPressIn}
           onPressOut={handleDictationPressOut}
