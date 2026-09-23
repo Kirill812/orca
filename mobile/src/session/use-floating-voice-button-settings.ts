@@ -2,12 +2,16 @@ import { useCallback, useEffect, useState } from 'react'
 import { useFocusEffect } from 'expo-router'
 import {
   loadFloatingVoiceButtonEnabled,
+  loadFloatingVoiceButtonOpacityPercent,
   loadFloatingVoiceButtonSizePercent,
   saveFloatingVoiceButtonEnabled,
+  saveFloatingVoiceButtonOpacityPercent,
   saveFloatingVoiceButtonSizePercent
-} from '../storage/preferences'
+} from './floating-voice-button-storage'
 import {
+  DEFAULT_FLOATING_VOICE_BUTTON_OPACITY_PERCENT,
   DEFAULT_FLOATING_VOICE_BUTTON_SIZE_PERCENT,
+  type FloatingVoiceButtonOpacityPercent,
   type FloatingVoiceButtonSizePercent
 } from './floating-voice-button-geometry'
 
@@ -20,10 +24,14 @@ import {
 export function useFloatingVoiceButtonSessionSettings(): {
   enabled: boolean
   sizePercent: FloatingVoiceButtonSizePercent
+  opacityPercent: FloatingVoiceButtonOpacityPercent
 } {
   const [enabled, setEnabled] = useState(true)
   const [sizePercent, setSizePercent] = useState<FloatingVoiceButtonSizePercent>(
     DEFAULT_FLOATING_VOICE_BUTTON_SIZE_PERCENT
+  )
+  const [opacityPercent, setOpacityPercent] = useState<FloatingVoiceButtonOpacityPercent>(
+    DEFAULT_FLOATING_VOICE_BUTTON_OPACITY_PERCENT
   )
 
   useFocusEffect(
@@ -39,13 +47,18 @@ export function useFloatingVoiceButtonSessionSettings(): {
           setSizePercent(value)
         }
       })
+      void loadFloatingVoiceButtonOpacityPercent().then((value) => {
+        if (active) {
+          setOpacityPercent(value)
+        }
+      })
       return () => {
         active = false
       }
     }, [])
   )
 
-  return { enabled, sizePercent }
+  return { enabled, sizePercent, opacityPercent }
 }
 
 /** Settings screen's own load/save state — separate from the session hook
@@ -53,28 +66,36 @@ export function useFloatingVoiceButtonSessionSettings(): {
 export function useFloatingVoiceButtonSettingsScreenState(): {
   enabled: boolean
   sizePercent: FloatingVoiceButtonSizePercent
+  opacityPercent: FloatingVoiceButtonOpacityPercent
   loaded: boolean
   setEnabled: (next: boolean) => void
   setSizePercent: (next: FloatingVoiceButtonSizePercent) => void
+  setOpacityPercent: (next: FloatingVoiceButtonOpacityPercent) => void
 } {
   const [enabled, setEnabledState] = useState(true)
   const [sizePercent, setSizePercentState] = useState<FloatingVoiceButtonSizePercent>(
     DEFAULT_FLOATING_VOICE_BUTTON_SIZE_PERCENT
   )
+  const [opacityPercent, setOpacityPercentState] = useState<FloatingVoiceButtonOpacityPercent>(
+    DEFAULT_FLOATING_VOICE_BUTTON_OPACITY_PERCENT
+  )
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     let active = true
-    void Promise.all([loadFloatingVoiceButtonEnabled(), loadFloatingVoiceButtonSizePercent()]).then(
-      ([loadedEnabled, loadedSizePercent]) => {
-        if (!active) {
-          return
-        }
-        setEnabledState(loadedEnabled)
-        setSizePercentState(loadedSizePercent)
-        setLoaded(true)
+    void Promise.all([
+      loadFloatingVoiceButtonEnabled(),
+      loadFloatingVoiceButtonSizePercent(),
+      loadFloatingVoiceButtonOpacityPercent()
+    ]).then(([loadedEnabled, loadedSizePercent, loadedOpacityPercent]) => {
+      if (!active) {
+        return
       }
-    )
+      setEnabledState(loadedEnabled)
+      setSizePercentState(loadedSizePercent)
+      setOpacityPercentState(loadedOpacityPercent)
+      setLoaded(true)
+    })
     return () => {
       active = false
     }
@@ -90,5 +111,18 @@ export function useFloatingVoiceButtonSettingsScreenState(): {
     void saveFloatingVoiceButtonSizePercent(next)
   }, [])
 
-  return { enabled, sizePercent, loaded, setEnabled, setSizePercent }
+  const setOpacityPercent = useCallback((next: FloatingVoiceButtonOpacityPercent) => {
+    setOpacityPercentState(next)
+    void saveFloatingVoiceButtonOpacityPercent(next)
+  }, [])
+
+  return {
+    enabled,
+    sizePercent,
+    opacityPercent,
+    loaded,
+    setEnabled,
+    setSizePercent,
+    setOpacityPercent
+  }
 }

@@ -7,7 +7,7 @@ import { colors } from '../theme/mobile-theme'
 import {
   loadFloatingVoiceButtonPosition,
   saveFloatingVoiceButtonPosition
-} from '../storage/preferences'
+} from './floating-voice-button-storage'
 import {
   DEFAULT_FLOATING_VOICE_BUTTON_POSITION,
   clampFloatingVoiceButtonPosition,
@@ -26,6 +26,9 @@ export type FloatingVoiceButtonProps = {
   /** Renders nothing when off — the caller still owns showing the inline button. */
   visible: boolean
   sizePercent: number
+  /** 5-100; user-controlled see-through-ness of the floating button only —
+   *  the inline mic button is unaffected. */
+  opacityPercent: number
   mode: string | undefined
   /** Recording or starting — drawn with the active ring, like the inline button. */
   active: boolean
@@ -69,6 +72,7 @@ export function FloatingVoiceButtonOverlay(props: FloatingVoiceButtonProps) {
 
 function FloatingVoiceButtonDraggable({
   sizePercent,
+  opacityPercent,
   mode,
   active,
   processing = false,
@@ -197,6 +201,12 @@ function FloatingVoiceButtonDraggable({
     return null
   }
 
+  // Why not folded into a style array entry: the e-ink high-contrast
+  // post-processor only rewrites backgroundColor/borderColor/borderWidth
+  // inside StyleSheet.create — opacity (user setting + disabled dimming)
+  // must stay inline so that pass leaves it alone.
+  const opacity = (disabled ? 0.45 : 1) * (opacityPercent / 100)
+
   return (
     <GestureHandlerRootView style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
       <GestureDetector gesture={pan}>
@@ -216,20 +226,16 @@ function FloatingVoiceButtonDraggable({
               height: diameter,
               borderRadius: diameter / 2,
               left: pos.x,
-              top: pos.y
+              top: pos.y,
+              opacity
             },
-            active && styles.buttonActive,
-            disabled && styles.buttonDisabled
+            active && styles.buttonActive
           ]}
         >
           {processing ? (
-            <ActivityIndicator size="small" color={colors.textSecondary} />
+            <ActivityIndicator size="small" color={colors.textPrimary} />
           ) : (
-            <Mic
-              size={Math.round(diameter * 0.45)}
-              color={active ? colors.textPrimary : colors.textSecondary}
-              strokeWidth={2.4}
-            />
+            <Mic size={Math.round(diameter * 0.45)} color={colors.textPrimary} strokeWidth={2.4} />
           )}
         </View>
       </GestureDetector>
@@ -238,27 +244,18 @@ function FloatingVoiceButtonDraggable({
 }
 
 const styles = StyleSheet.create({
+  // Outline-only per the design brief: no fill, so the e-ink high-contrast
+  // pass (which rewrites background/border colors) has nothing to invert.
   button: {
     position: 'absolute',
-    backgroundColor: colors.bgRaised,
-    borderWidth: 1.5,
-    borderColor: colors.borderSubtle,
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: colors.textPrimary,
     alignItems: 'center',
-    justifyContent: 'center',
-    // Clear border over a heavy shadow keeps it visible on light/e-ink
-    // screens per the design brief; a light native elevation still helps it
-    // read as floating above the content.
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3
+    justifyContent: 'center'
   },
+  // Active/recording state reads via a thicker border, never a fill.
   buttonActive: {
-    backgroundColor: colors.bgPanel,
-    borderColor: colors.textSecondary
-  },
-  buttonDisabled: {
-    opacity: 0.45
+    borderWidth: 3
   }
 })

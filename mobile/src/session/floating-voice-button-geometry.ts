@@ -26,6 +26,22 @@ export function floatingVoiceButtonDiameter(percent: number): number {
   return Math.round((INLINE_MIC_BUTTON_SIZE_PX * percent) / 100)
 }
 
+export const FLOATING_VOICE_BUTTON_OPACITY_OPTIONS = [5, 10, 25, 50, 75, 100] as const
+
+export type FloatingVoiceButtonOpacityPercent =
+  (typeof FLOATING_VOICE_BUTTON_OPACITY_OPTIONS)[number]
+
+export const DEFAULT_FLOATING_VOICE_BUTTON_OPACITY_PERCENT: FloatingVoiceButtonOpacityPercent = 100
+
+export function isFloatingVoiceButtonOpacityPercent(
+  value: unknown
+): value is FloatingVoiceButtonOpacityPercent {
+  return (
+    typeof value === 'number' &&
+    (FLOATING_VOICE_BUTTON_OPACITY_OPTIONS as readonly number[]).includes(value)
+  )
+}
+
 // Movement under this many px is a tap/hold-press, not a drag. Gesture.Pan's
 // own minDistance already filters sub-pixel jitter; this is the threshold that
 // decides intent once the pan has activated.

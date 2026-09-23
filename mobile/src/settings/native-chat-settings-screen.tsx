@@ -8,7 +8,9 @@ import { colors, radii, spacing, typography } from '../theme/mobile-theme'
 import { useMobileDefaultSessionViewPreference } from '../session/use-mobile-default-session-view-preference'
 import { useFloatingVoiceButtonSettingsScreenState } from '../session/use-floating-voice-button-settings'
 import {
+  FLOATING_VOICE_BUTTON_OPACITY_OPTIONS,
   FLOATING_VOICE_BUTTON_SIZE_OPTIONS,
+  type FloatingVoiceButtonOpacityPercent,
   type FloatingVoiceButtonSizePercent
 } from '../session/floating-voice-button-geometry'
 import { PickerModal, type PickerOption } from '../components/PickerModal'
@@ -16,11 +18,18 @@ import { PickerModal, type PickerOption } from '../components/PickerModal'
 // PickerModal is string-keyed; picker values are the percent as a string,
 // mapped back to the numeric percent on select.
 type VoiceButtonSizeOptionValue = `${FloatingVoiceButtonSizePercent}`
+type VoiceButtonOpacityOptionValue = `${FloatingVoiceButtonOpacityPercent}`
 
 const VOICE_BUTTON_SIZE_OPTIONS: PickerOption<VoiceButtonSizeOptionValue>[] =
   FLOATING_VOICE_BUTTON_SIZE_OPTIONS.map((percent) => ({
     value: `${percent}` as VoiceButtonSizeOptionValue,
     label: percent === 200 ? `${percent}% (default)` : `${percent}%`
+  }))
+
+const VOICE_BUTTON_OPACITY_OPTIONS: PickerOption<VoiceButtonOpacityOptionValue>[] =
+  FLOATING_VOICE_BUTTON_OPACITY_OPTIONS.map((percent) => ({
+    value: `${percent}` as VoiceButtonOpacityOptionValue,
+    label: percent === 100 ? `${percent}% (default)` : `${percent}%`
   }))
 
 export default function NativeChatSettingsScreen({ onBack }: { onBack?: () => void }) {
@@ -33,10 +42,13 @@ export default function NativeChatSettingsScreen({ onBack }: { onBack?: () => vo
   const {
     enabled: floatingVoiceEnabled,
     sizePercent: floatingVoiceSizePercent,
+    opacityPercent: floatingVoiceOpacityPercent,
     setEnabled: setFloatingVoiceEnabled,
-    setSizePercent: setFloatingVoiceSizePercent
+    setSizePercent: setFloatingVoiceSizePercent,
+    setOpacityPercent: setFloatingVoiceOpacityPercent
   } = useFloatingVoiceButtonSettingsScreenState()
   const [showSizePicker, setShowSizePicker] = useState(false)
+  const [showOpacityPicker, setShowOpacityPicker] = useState(false)
 
   return (
     <GestureHandlerRootView style={[styles.container, { paddingTop: insets.top + spacing.sm }]}>
@@ -112,6 +124,21 @@ export default function NativeChatSettingsScreen({ onBack }: { onBack?: () => vo
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </Pressable>
+          <Pressable
+            style={[styles.row, styles.rowDivider]}
+            disabled={!floatingVoiceEnabled}
+            onPress={() => setShowOpacityPicker(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Button opacity"
+          >
+            <View style={styles.rowContent}>
+              <Text style={[styles.rowLabel, !floatingVoiceEnabled && styles.rowLabelDisabled]}>
+                Button opacity
+              </Text>
+              <Text style={styles.rowSublabel}>{floatingVoiceOpacityPercent}%</Text>
+            </View>
+            <ChevronRight size={18} color={colors.textMuted} />
+          </Pressable>
         </View>
       </ScrollView>
 
@@ -124,6 +151,17 @@ export default function NativeChatSettingsScreen({ onBack }: { onBack?: () => vo
           setFloatingVoiceSizePercent(Number(value) as FloatingVoiceButtonSizePercent)
         }
         onClose={() => setShowSizePicker(false)}
+      />
+
+      <PickerModal<VoiceButtonOpacityOptionValue>
+        visible={showOpacityPicker}
+        title="Button opacity"
+        options={VOICE_BUTTON_OPACITY_OPTIONS}
+        selected={`${floatingVoiceOpacityPercent}` as VoiceButtonOpacityOptionValue}
+        onSelect={(value) =>
+          setFloatingVoiceOpacityPercent(Number(value) as FloatingVoiceButtonOpacityPercent)
+        }
+        onClose={() => setShowOpacityPicker(false)}
       />
     </GestureHandlerRootView>
   )

@@ -25,6 +25,7 @@ export function MobileSessionContentRow({ controller }: { controller: MobileSess
     handleSessionContentRowLayout,
     floatingVoiceEnabled,
     floatingVoiceSizePercent,
+    floatingVoiceOpacityPercent,
     dictation,
     dictationMode,
     canSend,
@@ -59,6 +60,7 @@ export function MobileSessionContentRow({ controller }: { controller: MobileSess
         <FloatingVoiceButtonOverlay
           visible={floatingVoiceEnabled}
           sizePercent={floatingVoiceSizePercent}
+          opacityPercent={floatingVoiceOpacityPercent}
           mode={dictationMode}
           active={dictation.isRecording || dictation.isStarting}
           processing={dictation.isProcessing}
