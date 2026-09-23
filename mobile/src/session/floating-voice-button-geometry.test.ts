@@ -10,8 +10,91 @@ import {
   isFloatingVoiceButtonNormalizedPosition,
   isFloatingVoiceButtonOpacityPercent,
   isFloatingVoiceButtonSizePercent,
-  normalizeFloatingVoiceButtonPosition
+  normalizeFloatingVoiceButtonPosition,
+  resolveFloatingVoiceRelease,
+  shouldAutoSendDictation
 } from './floating-voice-button-geometry'
+
+const BASE_RELEASE_PARAMS = {
+  dx: 0,
+  dy: 0,
+  mode: 'toggle',
+  disabled: false,
+  heldLongEnough: false,
+  active: false,
+  processing: false
+}
+
+describe('resolveFloatingVoiceRelease', () => {
+  it('tap with zero movement resolves to tap', () => {
+    expect(resolveFloatingVoiceRelease(BASE_RELEASE_PARAMS)).toBe('tap')
+  })
+
+  it('hold mode stationary release resolves to pressOut', () => {
+    expect(resolveFloatingVoiceRelease({ ...BASE_RELEASE_PARAMS, mode: 'hold' })).toBe('pressOut')
+  })
+
+  it('hold mode release still fires pressOut even if the finger drifted', () => {
+    expect(resolveFloatingVoiceRelease({ ...BASE_RELEASE_PARAMS, mode: 'hold', dx: 30 })).toBe(
+      'pressOut'
+    )
+  })
+
+  it('hold mode gives no action while disabled', () => {
+    expect(
+      resolveFloatingVoiceRelease({ ...BASE_RELEASE_PARAMS, mode: 'hold', disabled: true })
+    ).toBe('none')
+  })
+
+  it('movement past the drag threshold resolves to drag', () => {
+    expect(resolveFloatingVoiceRelease({ ...BASE_RELEASE_PARAMS, dx: 20 })).toBe('drag')
+  })
+
+  it('disabled tap resolves to no action', () => {
+    expect(resolveFloatingVoiceRelease({ ...BASE_RELEASE_PARAMS, disabled: true })).toBe('none')
+  })
+
+  it('a long-held tap while active cancels instead of toggling', () => {
+    expect(
+      resolveFloatingVoiceRelease({
+        ...BASE_RELEASE_PARAMS,
+        heldLongEnough: true,
+        active: true
+      })
+    ).toBe('cancel')
+  })
+
+  it('a long-held tap while processing cancels too', () => {
+    expect(
+      resolveFloatingVoiceRelease({
+        ...BASE_RELEASE_PARAMS,
+        heldLongEnough: true,
+        processing: true
+      })
+    ).toBe('cancel')
+  })
+
+  it('a long-held tap while idle is a plain tap, not a cancel', () => {
+    expect(resolveFloatingVoiceRelease({ ...BASE_RELEASE_PARAMS, heldLongEnough: true })).toBe(
+      'tap'
+    )
+  })
+})
+
+describe('shouldAutoSendDictation', () => {
+  it('sends when enabled and the transcript has content', () => {
+    expect(shouldAutoSendDictation(true, 'deploy the app')).toBe(true)
+  })
+
+  it('never sends when the setting is off', () => {
+    expect(shouldAutoSendDictation(false, 'deploy the app')).toBe(false)
+  })
+
+  it('never sends empty or whitespace-only text', () => {
+    expect(shouldAutoSendDictation(true, '')).toBe(false)
+    expect(shouldAutoSendDictation(true, '   ')).toBe(false)
+  })
+})
 
 const INSETS = { top: 10, bottom: 20, left: 0, right: 0 }
 

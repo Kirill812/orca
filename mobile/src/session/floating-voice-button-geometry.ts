@@ -51,6 +51,39 @@ export function isFloatingVoiceButtonDragTap(dx: number, dy: number): boolean {
   return Math.hypot(dx, dy) < FLOATING_VOICE_BUTTON_DRAG_THRESHOLD_PX
 }
 
+/** What a Pan gesture's release should do, decoupled from RNGH's onEnd/onFinalize
+ *  split so it's testable without mocking gesture-handler. 'hold' mode always
+ *  resolves to pressOut/none regardless of tap-vs-drag distance, matching a
+ *  walkie-talkie release firing even if the finger drifted a few px while held. */
+export type FloatingVoiceReleaseAction = 'tap' | 'cancel' | 'drag' | 'pressOut' | 'none'
+
+export function resolveFloatingVoiceRelease(params: {
+  dx: number
+  dy: number
+  mode: string | undefined
+  disabled: boolean
+  heldLongEnough: boolean
+  active: boolean
+  processing: boolean
+}): FloatingVoiceReleaseAction {
+  if (params.mode === 'hold') {
+    return params.disabled ? 'none' : 'pressOut'
+  }
+  if (!isFloatingVoiceButtonDragTap(params.dx, params.dy)) {
+    return 'drag'
+  }
+  if (params.disabled) {
+    return 'none'
+  }
+  return params.heldLongEnough && (params.active || params.processing) ? 'cancel' : 'tap'
+}
+
+/** Whether a finished (non-cancelled) dictation transcript should be submitted
+ *  immediately, as if the user pressed Send. */
+export function shouldAutoSendDictation(autoSendEnabled: boolean, transcript: string): boolean {
+  return autoSendEnabled && transcript.trim().length > 0
+}
+
 export type FloatingVoiceButtonInsets = {
   readonly top: number
   readonly bottom: number

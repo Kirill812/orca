@@ -96,7 +96,7 @@ describe('terminal send keyboard dismissal wiring', () => {
   it('dismisses the buffered command send only once the write is accepted', () => {
     const slice = sourceSlice(
       sendActionsSource,
-      'async function handleSend() {',
+      'async function handleSend(overrideText?: string) {',
       'async function handleAccessoryKey('
     )
     const acceptedAt = slice.indexOf(
@@ -134,7 +134,7 @@ describe('terminal send keyboard dismissal wiring', () => {
   it('restores a rejected buffered draft by origin without generation fencing', () => {
     const sendSlice = sourceSlice(
       sendActionsSource,
-      'async function handleSend() {',
+      'async function handleSend(overrideText?: string) {',
       'async function handleAccessoryKey('
     )
     const originAt = sendSlice.indexOf('handle: activeHandle')
