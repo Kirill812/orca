@@ -94,14 +94,59 @@ export const lightColors: typeof darkColors = {
 }
 
 // Why a global instead of importing Appearance here: this module is also bundled into the
-// terminal WebView document script, where react-native does not exist. color-scheme-boot.ts
+// terminal WebView document script, where react-native does not exist. appearance-boot.ts
 // sets it before any screen module evaluates, and there it falls back to dark.
 // ponytail: scheme is fixed per app launch (StyleSheets are built at import time); switching
 // the OS theme applies on the next cold start.
-export const isLightTheme =
-  (globalThis as { __orcaColorScheme?: string }).__orcaColorScheme === 'light'
+// High contrast, for e-ink: every grey is an exact 16-level greyscale step (a multiple of 0x11),
+// so the panel neither dithers nor quantises two surfaces into one; separation comes from dark
+// borders instead of near-identical fills.
+export const highContrastLightColors: typeof darkColors = {
+  ...lightColors,
+  bgPanel: '#ffffff',
+  bgRaised: '#eeeeee',
+  borderSubtle: '#222222',
+  textPrimary: '#000000',
+  textSecondary: '#111111',
+  textMuted: '#333333',
+  surfaceBright: '#000000',
+  accentBlue: '#1d4ed8',
+  statusGreen: '#166534',
+  statusAmber: '#92400e',
+  statusRed: '#b91c1c',
+  statusPurple: '#5b21b6',
+  gitDecorationAdded: '#166534',
+  gitDecorationDeleted: '#b91c1c',
+  diffAddedBg: 'rgba(22, 101, 52, 0.2)',
+  diffDeletedBg: 'rgba(185, 28, 28, 0.2)'
+}
 
-export const colors = isLightTheme ? lightColors : darkColors
+export const highContrastDarkColors: typeof darkColors = {
+  ...darkColors,
+  bgBase: '#000000',
+  bgPanel: '#000000',
+  bgRaised: '#222222',
+  borderSubtle: '#dddddd',
+  editorSurface: '#000000',
+  textPrimary: '#ffffff',
+  textSecondary: '#eeeeee',
+  textMuted: '#cccccc',
+  surfaceBright: '#ffffff',
+  terminalBg: '#000000'
+}
+
+const boot = globalThis as { __orcaColorScheme?: string; __orcaHighContrast?: boolean }
+
+export const isLightTheme = boot.__orcaColorScheme === 'light'
+export const isHighContrast = boot.__orcaHighContrast === true
+
+export const colors = isHighContrast
+  ? isLightTheme
+    ? highContrastLightColors
+    : highContrastDarkColors
+  : isLightTheme
+    ? lightColors
+    : darkColors
 
 export const spacing = {
   xs: 4,
