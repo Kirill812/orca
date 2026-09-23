@@ -36,7 +36,7 @@ vi.mock('./mobile-file-preview-styles', () => ({
   filePreviewStyles: {}
 }))
 
-vi.mock('../storage/preferences', () => ({
+vi.mock('./markdown-text-scale-storage', () => ({
   loadMarkdownTextScale: vi.fn(async () => 1),
   saveMarkdownTextScale: vi.fn(async () => undefined)
 }))

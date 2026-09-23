@@ -5,7 +5,7 @@ import { Code, Pencil, Type } from 'lucide-react-native'
 import { MobileMarkdown } from '../components/MobileMarkdown'
 import { PickerModal, type PickerOption } from '../components/PickerModal'
 import { colors } from '../theme/mobile-theme'
-import { loadMarkdownTextScale, saveMarkdownTextScale } from '../storage/preferences'
+import { loadMarkdownTextScale, saveMarkdownTextScale } from './markdown-text-scale-storage'
 import { MARKDOWN_TEXT_SCALES } from './markdown-text-scales'
 import { useMarkdownTextScalePinchGesture } from './use-markdown-text-scale-pinch-gesture'
 import {

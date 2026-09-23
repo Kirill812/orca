@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { persistMirrored } from './mirrored-storage-keys'
 import { TERMINAL_TEXT_SCALES } from '../terminal/terminal-text-scales'
-import { MARKDOWN_TEXT_SCALES } from '../files/markdown-text-scales'
 
 const PINS_PREFIX = 'orca:pins:'
 // Consent to the push service is separate from the old socket notification choice.
@@ -98,30 +97,6 @@ export async function saveTerminalTextScale(scale: number): Promise<void> {
   // Through the one write path: the hybrid shell hands this key to the page on every `init`,
   // built synchronously, and what it reads is noted there on an accepted write (ruling 35).
   await persistMirrored(TEXT_SCALE_KEY, value)
-}
-
-const MARKDOWN_TEXT_SCALE_KEY = 'orca:markdownTextScale'
-const DEFAULT_MARKDOWN_TEXT_SCALE = 1
-
-export async function loadMarkdownTextScale(): Promise<number> {
-  try {
-    const raw = await AsyncStorage.getItem(MARKDOWN_TEXT_SCALE_KEY)
-    if (raw === null) {
-      return DEFAULT_MARKDOWN_TEXT_SCALE
-    }
-    const parsed = Number(raw)
-    return (MARKDOWN_TEXT_SCALES as readonly number[]).includes(parsed)
-      ? parsed
-      : DEFAULT_MARKDOWN_TEXT_SCALE
-  } catch {
-    return DEFAULT_MARKDOWN_TEXT_SCALE
-  }
-}
-
-// Why plain AsyncStorage, not persistMirrored: unlike the terminal text scale, no WebView
-// shell reads this synchronously on init — the Markdown viewer is plain React Native.
-export async function saveMarkdownTextScale(scale: number): Promise<void> {
-  await AsyncStorage.setItem(MARKDOWN_TEXT_SCALE_KEY, String(scale))
 }
 
 const AUTOCOMPLETE_KEY = 'orca:terminalAutocompleteEnabled'
