@@ -75,7 +75,7 @@ describe('clampFloatingVoiceButtonPosition', () => {
       containerHeight: 800,
       insets: INSETS
     })
-    expect(result).toEqual({ x: 400 - 68, y: 800 - 20 - 68 })
+    expect(result).toEqual({ x: 400 - 8 - 68, y: 800 - 20 - 8 - 68 })
   })
 
   it('clamps past the top/left edge to the inset corner', () => {
@@ -87,7 +87,7 @@ describe('clampFloatingVoiceButtonPosition', () => {
       containerHeight: 800,
       insets: INSETS
     })
-    expect(result).toEqual({ x: 0, y: 10 })
+    expect(result).toEqual({ x: 8, y: 18 })
   })
 
   it('never produces a max below min on a container smaller than the button', () => {
@@ -99,8 +99,8 @@ describe('clampFloatingVoiceButtonPosition', () => {
       containerHeight: 100,
       insets: INSETS
     })
-    expect(result.x).toBe(0)
-    expect(result.y).toBe(10)
+    expect(result.x).toBe(8)
+    expect(result.y).toBe(18)
   })
 
   it('falls back to the min corner for a non-finite position', () => {
@@ -112,7 +112,7 @@ describe('clampFloatingVoiceButtonPosition', () => {
       containerHeight: 800,
       insets: INSETS
     })
-    expect(result).toEqual({ x: 0, y: 10 })
+    expect(result).toEqual({ x: 8, y: 18 })
   })
 })
 
