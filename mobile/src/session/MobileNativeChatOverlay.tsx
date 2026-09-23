@@ -14,6 +14,9 @@ type Props = {
   /** Native-chat image attachments: picking adds a composer chip, and sending
    *  rides the pending images along with the message text (desktop parity). */
   images: MobileNativeChatImageAttachments
+  /** True when the floating voice button (Settings → Chat UI) replaces this
+   *  inline one, so the two never show at once. */
+  hideMicButton?: boolean
   onMicPress: () => void
   micActive: boolean
   dictationMode: string | undefined
@@ -39,6 +42,7 @@ export function MobileNativeChatOverlay({
   controller,
   onOpenFile,
   images,
+  hideMicButton = false,
   onMicPress,
   micActive,
   dictationMode,
@@ -104,7 +108,7 @@ export function MobileNativeChatOverlay({
         attachments={images.attachments}
         onRemoveAttachment={images.removeAttachment}
         isAttaching={images.isAttaching}
-        onMicPress={onMicPress}
+        onMicPress={hideMicButton ? undefined : onMicPress}
         micActive={micActive}
         dictationMode={dictationMode}
         onMicPressIn={onMicPressIn}
