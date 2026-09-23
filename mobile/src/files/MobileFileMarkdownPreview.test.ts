@@ -11,11 +11,16 @@ vi.mock('react-native', () => ({
 
 vi.mock('lucide-react-native', () => ({
   Code: 'Code',
-  Pencil: 'Pencil'
+  Pencil: 'Pencil',
+  Type: 'Type'
 }))
 
 vi.mock('../components/MobileMarkdown', () => ({
   MobileMarkdown: 'MobileMarkdown'
+}))
+
+vi.mock('../components/PickerModal', () => ({
+  PickerModal: 'PickerModal'
 }))
 
 vi.mock('./MobileFilePreviewSourceText', () => ({
@@ -30,6 +35,28 @@ vi.mock('../theme/mobile-theme', () => ({
 vi.mock('./mobile-file-preview-styles', () => ({
   filePreviewStyles: {}
 }))
+
+vi.mock('../storage/preferences', () => ({
+  loadMarkdownTextScale: vi.fn(async () => 1),
+  saveMarkdownTextScale: vi.fn(async () => undefined)
+}))
+
+// Why: the real module pulls in react-native's native gesture view configs,
+// which aren't parseable outside a device/simulator runtime — same reason
+// MobileNativeChatView.test.ts stubs the chainable gesture builder.
+vi.mock('react-native-gesture-handler', () => {
+  const chain = {
+    runOnJS: () => chain,
+    onStart: () => chain,
+    onUpdate: () => chain,
+    onEnd: () => chain
+  }
+  return {
+    Gesture: { Simultaneous: () => ({}), Native: () => ({}), Pinch: () => chain },
+    GestureDetector: 'GestureDetector',
+    GestureHandlerRootView: 'GestureHandlerRootView'
+  }
+})
 
 type PreviewProps = Parameters<typeof MobileFileMarkdownPreview>[0]
 
@@ -101,5 +128,32 @@ describe('MobileFileMarkdownPreview', () => {
 
     await updatePreview(renderer, { ...baseProps, relativePath: 'notes/second.md', initialLine: 8 })
     expect(isSelected(renderer, 'View Markdown source')).toBe(true)
+  })
+
+  it('shows the text-size control only in preview mode, and opens the picker', async () => {
+    const baseProps: PreviewProps = {
+      relativePath: 'notes/first.md',
+      content: '# First',
+      truncated: false,
+      byteLength: 7
+    }
+    renderer = await renderPreview(baseProps)
+
+    const findTextSizeButton = () =>
+      renderer!.root
+        .findAllByType('Pressable')
+        .find((node) => node.props.accessibilityLabel === 'Markdown text size')
+
+    expect(findTextSizeButton()).toBeDefined()
+    const picker = renderer.root.findByType('PickerModal' as never)
+    expect(picker.props.visible).toBe(false)
+
+    await act(async () => {
+      findTextSizeButton()!.props.onPress()
+    })
+    expect(renderer.root.findByType('PickerModal' as never).props.visible).toBe(true)
+
+    await selectMode(renderer, 'View Markdown source')
+    expect(findTextSizeButton()).toBeUndefined()
   })
 })
