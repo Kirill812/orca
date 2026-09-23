@@ -1,6 +1,6 @@
 const fs = require('fs')
 const path = require('path')
-const { withDangerousMod, withMainActivity, withMainApplication } = require('expo/config-plugins')
+const { withDangerousMod, withMainApplication } = require('expo/config-plugins')
 
 // Why: React Native converts dp<->px with the display's real density (getRealMetrics in
 // DisplayMetricsHolder / PixelUtil), while the app's Resources can carry a different, per-app
@@ -9,6 +9,11 @@ const { withDangerousMod, withMainActivity, withMainApplication } = require('exp
 // density with the display's keeps both sides consistent. A stock Android "Display size" change
 // moves both together, so it is untouched. RN ships prebuilt on Android, so this is fixed at the
 // app's context instead of in PixelUtil.
+//
+// Only the Application context is aligned: RN reads its window metrics from
+// getApplicationContext() (ReactRootView, ReactHostImpl). The Activity's base context must stay the
+// one the framework created — a createConfigurationContext() copy there is not tied to the window,
+// which broke the soft keyboard (tapping a text field no longer raised the IME) on BOOX.
 const HELPER_CLASS = 'OrcaDisplayDensity'
 const MARKER = `${HELPER_CLASS}.wrap(`
 
@@ -56,10 +61,6 @@ function injectAttachBaseContext(source, className) {
 }
 
 function withAndroidAlignDisplayDensity(config) {
-  config = withMainActivity(config, (cfg) => {
-    cfg.modResults.contents = injectAttachBaseContext(cfg.modResults.contents, 'MainActivity')
-    return cfg
-  })
   config = withMainApplication(config, (cfg) => {
     cfg.modResults.contents = injectAttachBaseContext(cfg.modResults.contents, 'MainApplication')
     return cfg
