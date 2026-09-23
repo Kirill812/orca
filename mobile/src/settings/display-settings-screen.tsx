@@ -1,5 +1,14 @@
-import { useCallback, useState } from 'react'
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native'
+import { useCallback, useEffect, useState } from 'react'
+import {
+  Dimensions,
+  PixelRatio,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions
+} from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
@@ -33,6 +42,25 @@ const TEXT_SIZE_OPTIONS: PickerOption<string>[] = TEXT_SCALES.map((scale) => ({
 // Read once per app launch: what the running app actually uses, since both settings are
 // applied by appearance-boot.ts before any screen is built.
 const ACTIVE_PREFS = readAppearancePrefs()
+
+// Why: BOOX EinkWise changes DPI on a running app, and page/terminal edges then overflow the
+// screen. This line shows what React Native currently believes, live, so a photo before and
+// after a DPI change tells whether RN ever learned about it.
+function DisplayMetricsLine() {
+  const win = useWindowDimensions()
+  const [screen, setScreen] = useState(() => Dimensions.get('screen'))
+  useEffect(() => {
+    const sub = Dimensions.addEventListener('change', (e) => setScreen(e.screen))
+    return () => sub.remove()
+  }, [])
+  const r = (n: number) => Math.round(n)
+  return (
+    <Text style={styles.metrics} selectable>
+      {`window ${r(win.width)}×${r(win.height)} dp @${win.scale} · font ${win.fontScale}\n`}
+      {`screen ${r(screen.width)}×${r(screen.height)} dp @${screen.scale} · ratio ${PixelRatio.get()}`}
+    </Text>
+  )
+}
 
 type OpenPicker = 'theme' | 'contrast' | 'textSize' | null
 
@@ -131,6 +159,7 @@ export default function DisplaySettingsScreen({ onBack }: { onBack?: () => void 
             Close and reopen Orca to apply.
           </Text>
         ) : null}
+        <DisplayMetricsLine />
       </ScrollView>
 
       <PickerModal<ThemePreference>
@@ -217,6 +246,13 @@ const styles = StyleSheet.create({
   },
   rowContent: {
     flex: 1
+  },
+  metrics: {
+    marginTop: spacing.xl,
+    paddingHorizontal: spacing.xs,
+    fontFamily: typography.monoFamily,
+    fontSize: typography.metaSize,
+    color: colors.textMuted
   },
   rowLabel: {
     fontSize: typography.bodySize,
