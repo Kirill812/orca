@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 const require = createRequire(import.meta.url)
 const { injectAttachBaseContext } = require('../plugins/android-align-display-density.js') as {
-  injectAttachBaseContext: (source: string, className: string) => string
+  injectAttachBaseContext: (source: string, className: string, method?: string) => string
 }
 
 const activity = `package com.example
@@ -18,6 +18,12 @@ describe('android-align-display-density plugin', () => {
     const once = injectAttachBaseContext(activity, 'MainActivity')
     expect(once).toContain('super.attachBaseContext(OrcaDisplayDensity.wrap(base))')
     expect(injectAttachBaseContext(once, 'MainActivity')).toBe(once)
+  })
+
+  it('routes the Activity through the window-safe variant', () => {
+    expect(injectAttachBaseContext(activity, 'MainActivity', 'wrapActivity')).toContain(
+      'super.attachBaseContext(OrcaDisplayDensity.wrapActivity(base))'
+    )
   })
 
   it('handles a class header with several supertypes', () => {
