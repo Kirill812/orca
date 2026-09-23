@@ -14,6 +14,24 @@ describe('scaleTextStyles', () => {
     })
   })
 
+  it('lets fixed-height containers grow with larger text, but keeps squares and rules', () => {
+    const out = scaleTextStyles(
+      {
+        tab: { height: 36, paddingHorizontal: 8 },
+        icon: { width: 36, height: 36 },
+        rule: { height: 1 }
+      },
+      1.3
+    )
+    expect(out.tab).toEqual({ minHeight: 36, paddingHorizontal: 8 })
+    expect(out.icon).toEqual({ width: 36, height: 36 })
+    expect(out.rule).toEqual({ height: 1 })
+  })
+
+  it('keeps fixed heights when text shrinks', () => {
+    expect(scaleTextStyles({ tab: { height: 36 } }, 0.85)).toEqual({ tab: { height: 36 } })
+  })
+
   it('returns the input untouched at 100%', () => {
     const styles = { a: { fontSize: 12 } }
     expect(scaleTextStyles(styles, 1)).toBe(styles)
