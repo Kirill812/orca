@@ -3,7 +3,8 @@ type StyleMap = Record<string, unknown>
 /**
  * Multiplies every numeric fontSize and lineHeight in a StyleSheet.create() input by `scale`.
  * When text grows, a fixed `height` becomes a `minHeight` so rows, tabs and pills grow with their
- * text instead of clipping it; squares (icons, dots, round buttons) and thin rules keep their size.
+ * text instead of clipping it, and height caps grow in proportion; squares (icons, dots, round
+ * buttons) and thin rules keep their size.
  */
 export function scaleTextStyles<T extends StyleMap>(styles: T, scale: number): T {
   if (scale === 1) {
@@ -25,6 +26,10 @@ export function scaleTextStyles<T extends StyleMap>(styles: T, scale: number): T
     if (scale > 1 && typeof height === 'number' && height >= 16 && next.width !== height) {
       delete next.height
       next.minHeight = Math.max(height, typeof next.minHeight === 'number' ? next.minHeight : 0)
+    }
+    // A height cap bounds a strip of text (e.g. the session tab scroller), so it grows with it.
+    if (scale > 1 && typeof next.maxHeight === 'number' && next.maxHeight >= 16) {
+      next.maxHeight = Math.ceil(next.maxHeight * scale)
     }
     scaled[name] = next
   }
