@@ -160,7 +160,7 @@ export const customKeyModalStyles = StyleSheet.create({
     fontWeight: '500'
   },
   chipTextSelected: {
-    color: colors.bgBase
+    color: colors.onFill
   },
   chipGlyph: {
     color: colors.textMuted,
@@ -170,7 +170,7 @@ export const customKeyModalStyles = StyleSheet.create({
   chipGlyphSelected: {
     // Why bgBase at half opacity: the selected chip is filled with textPrimary, so the glyph
     // must invert with the palette rather than stay a fixed near-black.
-    color: colors.bgBase,
+    color: colors.onFill,
     opacity: 0.5
   },
   moreLink: {
@@ -230,7 +230,7 @@ export const customKeyModalStyles = StyleSheet.create({
     fontFamily: typography.monoFamily
   },
   keyCellTextSelected: {
-    color: colors.bgBase
+    color: colors.onFill
   },
   macroForm: {
     padding: spacing.md,
@@ -273,7 +273,7 @@ export const customKeyModalStyles = StyleSheet.create({
     backgroundColor: colors.bgRaised
   },
   saveButtonText: {
-    color: colors.bgBase,
+    color: colors.onFill,
     fontSize: 15,
     fontWeight: '600'
   },

@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm + 2
   },
   primaryButtonText: {
-    color: colors.bgBase,
+    color: colors.onFill,
     fontSize: typography.bodySize,
     fontWeight: '600'
   }

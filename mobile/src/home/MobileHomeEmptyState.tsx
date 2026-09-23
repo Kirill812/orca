@@ -42,7 +42,7 @@ export function MobileHomeEmptyState(props: {
           work from your phone.
         </Text>
         <Pressable style={styles.primaryButton} onPress={props.onPairDesktop}>
-          <QrCode size={17} color={colors.bgBase} />
+          <QrCode size={17} color={colors.onFill} />
           <Text style={styles.primaryButtonText}>Pair Desktop</Text>
         </Pressable>
       </View>
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: radii.card
   },
-  primaryButtonText: { color: colors.bgBase, fontSize: 15, fontWeight: '700' },
+  primaryButtonText: { color: colors.onFill, fontSize: 15, fontWeight: '700' },
   stepsSection: { paddingHorizontal: spacing.xl },
   sectionHeading: {
     fontSize: 11,

@@ -106,14 +106,19 @@ const hash = (parts: string[] | string): string =>
 // or removed — the host signature gains `hitSlop` — so the count holds at 3,274 and only the hash
 // moves. The render-token stream gains the four tokens that one attribute is, 35,203 -> 35,207.
 // Nothing else in the family moves.
+//
+// The light/high-contrast theme names the colour of content on a filled button `colors.onFill`
+// instead of borrowing `colors.bgBase` (same value in the dark and light palettes; black in high
+// contrast, where buttons lose their fill). The tasks drawers carry that swap in style values and
+// icon `color` props, so the style and render-tree hashes move and nothing else does.
 
 const SCREEN_RPC_SCREEN_HOOKS = '0f66df2141117dfec2f8a0adb3f598312e6fda8e80833a365a645796f5ab48c3'
 const PRE_REFACTOR_DIFF_HOOKS = '93c7189b32bed8456cc51814fffa8ce80cf62011ef968a9d53ddec2b9686f58f'
 const SCREEN_RPC_STATEMENTS = 'dd8f33cb3cf96f5c39abac397cb77e35f59079291033a1866ead462b041ab979'
 const MAIN_REBASED_DECLARATIONS = '920a1b66445d10e2a64fbdbe9d7138a4ebe21bbccde1b9ac9c89267cecc584b9'
 const SCREEN_RPC_SEMANTICS = 'e07a63387d57106483ee703ec6c19dea593e0eca5c651758f42bcb36254850b7'
-const PRE_REFACTOR_STYLES = '1db6af69c791d9963928541ad5310942fcbda6d984b422c90b6eb92b6816579a'
-const SCREEN_RPC_RENDER_TREE = '086742f95f1e87fb89d8c67ffd9f7a229799ae05115f9f4bcc1a925e56dcc8bb'
+const PRE_REFACTOR_STYLES = 'c7e1b31e2716bdfe6146fde67e48b156ef92b240cf8ef41d77f0d05db3ece36d'
+const SCREEN_RPC_RENDER_TREE = 'aeb0f1700f1c2bdad8cd9e2911be04d922df99b3ecb0fd5a4de3976c17cc5aa0'
 
 describe('Mobile Tasks refactor parity', () => {
   it('preserves recursively flattened hook and dependency order', () => {

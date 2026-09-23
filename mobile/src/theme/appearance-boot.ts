@@ -1,5 +1,7 @@
 import { Appearance, StyleSheet } from 'react-native'
 import { readAppearancePrefs } from './appearance-prefs'
+import { outlineFilledButtons } from './high-contrast-outline'
+import { highContrastDarkColors, highContrastLightColors } from './palettes'
 import { scaleTextStyles } from './scale-text-styles'
 
 // Why a boot module: mobile-theme.ts picks its palette once, at import time, and cannot import
@@ -13,10 +15,18 @@ boot.__orcaColorScheme =
   prefs.theme === 'system' ? (Appearance.getColorScheme() ?? 'dark') : prefs.theme
 boot.__orcaHighContrast = prefs.contrast === 'high'
 
-if (prefs.textScale !== 1) {
-  // ponytail: covers text styled via StyleSheet.create (nearly all of it); inline fontSize
-  // literals stay unscaled. Stacks with the Android/iOS system font size.
+const outlinePalette =
+  boot.__orcaColorScheme === 'light' ? highContrastLightColors : highContrastDarkColors
+
+if (prefs.textScale !== 1 || boot.__orcaHighContrast) {
+  // ponytail: covers styles built with StyleSheet.create (nearly all of them); inline style
+  // literals keep their size and fill. Text size stacks with the Android/iOS system font size.
   const create = StyleSheet.create
-  StyleSheet.create = ((styles) =>
-    create(scaleTextStyles(styles, prefs.textScale))) as typeof create
+  StyleSheet.create = ((styles) => {
+    let next = scaleTextStyles(styles, prefs.textScale)
+    if (boot.__orcaHighContrast) {
+      next = outlineFilledButtons(next, outlinePalette)
+    }
+    return create(next)
+  }) as typeof create
 }

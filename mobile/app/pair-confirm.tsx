@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm
   },
   primaryButtonText: {
-    color: colors.bgBase,
+    color: colors.onFill,
     fontSize: typography.bodySize,
     fontWeight: '600'
   },

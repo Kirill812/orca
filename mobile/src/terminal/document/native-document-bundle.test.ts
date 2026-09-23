@@ -311,7 +311,9 @@ describe('the bundled native document', () => {
     // that ships rather than about a bundle this case built for itself.
     const { script, inputs } = await terminalDocumentBundle()
     expect(inputs.filter((input) => input.includes('node_modules'))).toEqual([])
-    expect(inputs).toHaveLength(47)
+    // 48: `theme/palettes` split out of `theme/mobile-theme` (same colours, no new dependency) so the
+    // app's boot module can read the palettes without fixing the palette choice at import time.
+    expect(inputs).toHaveLength(48)
     expect(script).not.toContain('__commonJS')
     // `__esm` wrappers are esbuild's answer to a cycle, and a cycle would make a module's top level
     // run at first import rather than where the bundle places it.
