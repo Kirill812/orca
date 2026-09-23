@@ -66,6 +66,8 @@ export type FloatingVoiceButtonPoint = {
 /** Clamps a top-left px position so the button (given `diameter`) stays fully
  *  inside the container and clear of the safe area on every edge. Falls back
  *  to the top-left safe corner when the container is too small to fit it. */
+export const FLOATING_VOICE_BUTTON_EDGE_MARGIN = 8
+
 export function clampFloatingVoiceButtonPosition(params: {
   x: number
   y: number
@@ -75,10 +77,17 @@ export function clampFloatingVoiceButtonPosition(params: {
   insets: FloatingVoiceButtonInsets
 }): FloatingVoiceButtonPoint {
   const { diameter, containerWidth, containerHeight, insets } = params
-  const minX = insets.left
-  const minY = insets.top
-  const maxX = Math.max(minX, containerWidth - insets.right - diameter)
-  const maxY = Math.max(minY, containerHeight - insets.bottom - diameter)
+  // Why a margin: flush against the edge the circle's border is cut by the screen edge.
+  const minX = insets.left + FLOATING_VOICE_BUTTON_EDGE_MARGIN
+  const minY = insets.top + FLOATING_VOICE_BUTTON_EDGE_MARGIN
+  const maxX = Math.max(
+    minX,
+    containerWidth - insets.right - FLOATING_VOICE_BUTTON_EDGE_MARGIN - diameter
+  )
+  const maxY = Math.max(
+    minY,
+    containerHeight - insets.bottom - FLOATING_VOICE_BUTTON_EDGE_MARGIN - diameter
+  )
   return {
     x: clamp(params.x, minX, maxX),
     y: clamp(params.y, minY, maxY)
