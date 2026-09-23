@@ -24,8 +24,10 @@ import { RICH_MARKDOWN_EDITOR_DOCUMENT_SCRIPT } from './rich-markdown-editor-doc
  *   `<script>` region emptied. It was taken twice — on main's document and on this one — and the
  *   two readings agreed, which is what says the head, the stylesheet and the markup did not move.
  */
-const DOCUMENT_SHELL_SHA256 = '5054e1d5c87e4ce1805d4856ddc8bf36804e697675e6013d84da453d3e81af25'
-const DOCUMENT_SHELL_BYTES = 5621
+// Re-pinned for the markdown-tab text-size feature: `document-style.ts` grew a
+// `--markdown-text-scale` custom property and a `calc()` font-size rule on `#editor`.
+const DOCUMENT_SHELL_SHA256 = 'c4e8a892ef66920191a997004c3a4e9075b5b110b80633db12a5521bfda9aeef'
+const DOCUMENT_SHELL_BYTES = 5804
 
 const SCRIPT_OPEN = '  <script>\n'
 const SCRIPT_CLOSE = '\n  </script>'
