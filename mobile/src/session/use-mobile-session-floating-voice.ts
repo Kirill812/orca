@@ -1,5 +1,8 @@
 import { useFloatingVoiceButtonSessionSettings } from './use-floating-voice-button-settings'
-import type { FloatingVoiceButtonSizePercent } from './floating-voice-button-geometry'
+import type {
+  FloatingVoiceButtonOpacityPercent,
+  FloatingVoiceButtonSizePercent
+} from './floating-voice-button-geometry'
 
 /** Settings → Chat UI's floating voice button prefs, merged into the session
  *  controller so both the terminal dock and the Chat UI overlay can read them
@@ -7,7 +10,12 @@ import type { FloatingVoiceButtonSizePercent } from './floating-voice-button-geo
 export function useMobileSessionFloatingVoice(): {
   floatingVoiceEnabled: boolean
   floatingVoiceSizePercent: FloatingVoiceButtonSizePercent
+  floatingVoiceOpacityPercent: FloatingVoiceButtonOpacityPercent
 } {
-  const { enabled, sizePercent } = useFloatingVoiceButtonSessionSettings()
-  return { floatingVoiceEnabled: enabled, floatingVoiceSizePercent: sizePercent }
+  const { enabled, sizePercent, opacityPercent } = useFloatingVoiceButtonSessionSettings()
+  return {
+    floatingVoiceEnabled: enabled,
+    floatingVoiceSizePercent: sizePercent,
+    floatingVoiceOpacityPercent: opacityPercent
+  }
 }
