@@ -116,7 +116,7 @@ describe('session route offline-compose wiring', () => {
   it('holds composed text when the return key submits offline', () => {
     const handleSend = sourceSlice(
       sendActionsSource,
-      'async function handleSend()',
+      'async function handleSend(overrideText?: string)',
       'sendingRef.current = true'
     )
     expect(handleSend).toContain('!canSend')
