@@ -1,7 +1,8 @@
-// Orca mobile design tokens — matches desktop graphite/dark palette.
+// Orca mobile design tokens — matches desktop graphite/dark palette, plus a light
+// palette for light-mode devices (and e-ink readers, where a dark UI is unusable).
 // All screen files should import from here instead of using inline hex values.
 
-export const colors = {
+export const darkColors = {
   bgBase: '#111111',
   bgPanel: '#1a1a1a',
   bgRaised: '#242424',
@@ -47,7 +48,60 @@ export const colors = {
 
   // Terminal WebView background (Tokyonight) — separate from app chrome
   terminalBg: '#1a1b26'
-} as const
+}
+
+// Why pure white and near-black: on e-ink, white is the uninked state and faint greys
+// dither into noise, so the light palette favours solid, high-contrast values.
+export const lightColors: typeof darkColors = {
+  bgBase: '#ffffff',
+  bgPanel: '#f5f5f5',
+  bgRaised: '#ebebeb',
+  borderSubtle: '#d4d4d4',
+  editorSurface: '#ffffff',
+
+  textPrimary: '#111111',
+  textSecondary: '#404040',
+  textMuted: '#595959',
+
+  // Inverted: the primary action reads as a solid dark button on a light screen.
+  surfaceBright: '#1a1a1a',
+
+  accentBlue: '#2563eb',
+  onAccent: '#ffffff',
+
+  statusGreen: '#15803d',
+  statusAmber: '#b45309',
+  statusRed: '#dc2626',
+  mergeGreen: '#16a34a',
+  onMergeGreen: '#ffffff',
+  statusPurple: '#7c3aed',
+  gitDecorationAdded: '#2e7d32',
+  gitDecorationDeleted: '#c62828',
+  diffAddedBg: 'rgba(46, 125, 50, 0.14)',
+  diffDeletedBg: 'rgba(198, 40, 40, 0.14)',
+
+  // VS Code Light+ syntax colours.
+  syntaxComment: '#008000',
+  syntaxKeyword: '#0000ff',
+  syntaxString: '#a31515',
+  syntaxNumber: '#098658',
+  syntaxType: '#267f99',
+  syntaxFunction: '#795e26',
+  syntaxVariable: '#001080',
+  syntaxMeta: '#af00db',
+
+  terminalBg: '#ffffff'
+}
+
+// Why a global instead of importing Appearance here: this module is also bundled into the
+// terminal WebView document script, where react-native does not exist. color-scheme-boot.ts
+// sets it before any screen module evaluates, and there it falls back to dark.
+// ponytail: scheme is fixed per app launch (StyleSheets are built at import time); switching
+// the OS theme applies on the next cold start.
+export const isLightTheme =
+  (globalThis as { __orcaColorScheme?: string }).__orcaColorScheme === 'light'
+
+export const colors = isLightTheme ? lightColors : darkColors
 
 export const spacing = {
   xs: 4,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { colors } from './mobile-theme'
+import { darkColors, lightColors } from './mobile-theme'
 
 function channelLuminance(channel: number): number {
   const value = channel / 255
@@ -23,8 +23,11 @@ function contrastRatio(foreground: string, background: string): number {
   return (lighter + 0.05) / (darker + 0.05)
 }
 
-describe('mobile text contrast', () => {
-  it('keeps muted text readable on every standard dark surface', () => {
+describe.each([
+  ['dark', darkColors],
+  ['light', lightColors]
+] as const)('mobile text contrast (%s)', (_name, colors) => {
+  it('keeps muted text readable on every standard surface', () => {
     for (const surface of [colors.bgBase, colors.bgPanel, colors.bgRaised]) {
       expect(contrastRatio(colors.textMuted, surface)).toBeGreaterThanOrEqual(4.5)
     }
@@ -34,5 +37,11 @@ describe('mobile text contrast', () => {
     expect(contrastRatio(colors.textSecondary, colors.bgPanel)).toBeGreaterThan(
       contrastRatio(colors.textMuted, colors.bgPanel)
     )
+  })
+
+  it('keeps status colours readable on the base surface', () => {
+    for (const status of [colors.statusGreen, colors.statusRed, colors.accentBlue]) {
+      expect(contrastRatio(status, colors.bgBase)).toBeGreaterThanOrEqual(3)
+    }
   })
 })

@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import type { TerminalOscLinkRange } from '../../../src/shared/terminal-osc-link-ranges'
-import type { TerminalWebViewHandle, TerminalWebViewProps } from './terminal-webview-contract'
+import type {
+  MobileTerminalTheme,
+  TerminalWebViewHandle,
+  TerminalWebViewProps
+} from './terminal-webview-contract'
 import { useTerminalWebViewEngineErrorState } from './terminal-webview-engine-error-state'
 import { useTerminalWebReadyWatchdog } from './terminal-webview-ready-watchdog'
 import type { TerminalWebViewCommand } from './terminal-webview-messages'
@@ -9,6 +13,10 @@ import { dispatchTerminalWebViewNotification } from './terminal-webview-notifica
 import { routeTerminalQueryReply } from './terminal-webview-query-reply-routing'
 import { useTerminalWebViewReadyPromises } from './terminal-webview-ready-promises'
 import { createTerminalWriteCoalescer } from './terminal-write-coalescer'
+import { isLightTheme } from '../theme/mobile-theme'
+import { LIGHT_TERMINAL_THEME } from './terminal-webview-html/theme'
+
+const LIGHT_TERMINAL_THEME_PAYLOAD: MobileTerminalTheme = { mode: 'light', theme: LIGHT_TERMINAL_THEME }
 
 /**
  * Everything `TerminalWebView` does that is not about `react-native-webview`.
@@ -46,7 +54,7 @@ export function useTerminalWebViewController(
   transport: TerminalWebViewTransport
 ) {
   const {
-    terminalTheme,
+    terminalTheme: hostTerminalTheme,
     textScale = 1,
     onWebReady,
     onEngineError,
@@ -64,6 +72,9 @@ export function useTerminalWebViewController(
     onTextScaleChange
   } = props
   const { pingsOnForegroundRecovery, post } = transport
+  // Why override the desktop's theme: the host publishes its own (usually dark) terminal theme,
+  // which would leave a black terminal inside an otherwise light app — unusable on e-ink.
+  const terminalTheme = isLightTheme ? LIGHT_TERMINAL_THEME_PAYLOAD : hostTerminalTheme
   const isWebReadyRef = useRef(false)
   const pendingMessages = useMemo(() => createTerminalWebViewPendingMessages(), [])
   const messageIdRef = useRef(0)
