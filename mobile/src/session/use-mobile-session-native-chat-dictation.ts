@@ -240,6 +240,7 @@ export function useMobileSessionNativeChatDictation(
     toggleTabChatView,
     showNativeChat,
     showNativeChatRef,
+    chatInputSendable: nativeChatController.chatInputSendable,
     dictation,
     startDictation,
     cancelDictation,

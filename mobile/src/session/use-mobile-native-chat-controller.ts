@@ -274,6 +274,7 @@ export function useMobileNativeChatController(args: {
     toggleTabChatView,
     showNativeChat,
     showNativeChatRef,
+    chatInputSendable: inputSendable,
     nativeChatAgent: activeChatResolution?.agent ?? null,
     chatComposerText,
     setChatComposerText,
