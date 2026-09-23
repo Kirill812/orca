@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, StyleSheet, View, type LayoutChangeEvent } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler'
-import { Mic } from 'lucide-react-native'
+import { Mic, Square } from 'lucide-react-native'
 import { colors } from '../theme/mobile-theme'
 import {
   loadFloatingVoiceButtonPosition,
@@ -244,8 +244,16 @@ function FloatingVoiceButtonDraggable({
             active && styles.buttonActive
           ]}
         >
+          {/* Why a stop square while recording: a mic that looks the same before and during
+              recording left the user unable to tell whether dictation was running. */}
           {processing ? (
             <ActivityIndicator size="small" color={colors.textPrimary} />
+          ) : active ? (
+            <Square
+              size={Math.round(diameter * 0.34)}
+              color={colors.textPrimary}
+              fill={colors.textPrimary}
+            />
           ) : (
             <Mic size={Math.round(diameter * 0.45)} color={colors.textPrimary} strokeWidth={2.4} />
           )}
@@ -268,6 +276,6 @@ const styles = StyleSheet.create({
   },
   // Active/recording state reads via a thicker border, never a fill.
   buttonActive: {
-    borderWidth: 3
+    borderWidth: 4
   }
 })

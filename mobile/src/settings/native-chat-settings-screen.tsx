@@ -68,7 +68,9 @@ export default function NativeChatSettingsScreen({
   const [showSizePicker, setShowSizePicker] = useState(false)
   const [showOpacityPicker, setShowOpacityPicker] = useState(false)
   const [showBehaviourPicker, setShowBehaviourPicker] = useState(false)
-  const [dictationMode, setDictationMode] = useState<DictationModeValue>('hold')
+  // Why 'toggle': it is the desktop's default; showing "Hold" before the real value loads invited
+  // flipping the desktop into hold mode by mistake, where a tap starts and instantly cancels.
+  const [dictationMode, setDictationMode] = useState<DictationModeValue>('toggle')
 
   useEffect(() => {
     let active = true
