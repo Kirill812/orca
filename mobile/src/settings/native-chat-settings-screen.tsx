@@ -1,9 +1,27 @@
+import { useState } from 'react'
 import { View, Text, StyleSheet, Pressable, ScrollView, Switch } from 'react-native'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
-import { ChevronLeft } from 'lucide-react-native'
+import { ChevronLeft, ChevronRight } from 'lucide-react-native'
 import { colors, radii, spacing, typography } from '../theme/mobile-theme'
 import { useMobileDefaultSessionViewPreference } from '../session/use-mobile-default-session-view-preference'
+import { useFloatingVoiceButtonSettingsScreenState } from '../session/use-floating-voice-button-settings'
+import {
+  FLOATING_VOICE_BUTTON_SIZE_OPTIONS,
+  type FloatingVoiceButtonSizePercent
+} from '../session/floating-voice-button-geometry'
+import { PickerModal, type PickerOption } from '../components/PickerModal'
+
+// PickerModal is string-keyed; picker values are the percent as a string,
+// mapped back to the numeric percent on select.
+type VoiceButtonSizeOptionValue = `${FloatingVoiceButtonSizePercent}`
+
+const VOICE_BUTTON_SIZE_OPTIONS: PickerOption<VoiceButtonSizeOptionValue>[] =
+  FLOATING_VOICE_BUTTON_SIZE_OPTIONS.map((percent) => ({
+    value: `${percent}` as VoiceButtonSizeOptionValue,
+    label: percent === 200 ? `${percent}% (default)` : `${percent}%`
+  }))
 
 export default function NativeChatSettingsScreen({ onBack }: { onBack?: () => void }) {
   const router = useRouter()
@@ -12,8 +30,16 @@ export default function NativeChatSettingsScreen({ onBack }: { onBack?: () => vo
   const { defaultView, setDefaultView } = useMobileDefaultSessionViewPreference()
   const chatDefault = defaultView === 'chat'
 
+  const {
+    enabled: floatingVoiceEnabled,
+    sizePercent: floatingVoiceSizePercent,
+    setEnabled: setFloatingVoiceEnabled,
+    setSizePercent: setFloatingVoiceSizePercent
+  } = useFloatingVoiceButtonSettingsScreenState()
+  const [showSizePicker, setShowSizePicker] = useState(false)
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top + spacing.sm }]}>
+    <GestureHandlerRootView style={[styles.container, { paddingTop: insets.top + spacing.sm }]}>
       <View style={styles.topRow}>
         <Pressable
           accessibilityRole="button"
@@ -51,8 +77,55 @@ export default function NativeChatSettingsScreen({ onBack }: { onBack?: () => vo
             />
           </View>
         </View>
+
+        <Text style={[styles.groupHeading, styles.sectionTopGap]}>VOICE BUTTON</Text>
+        <Text style={styles.groupDescription}>
+          A floating mic button hovers over the terminal and Chat UI screens and can be dragged
+          anywhere. Turn it off to use the mic button built into the input bar instead.
+        </Text>
+        <View style={[styles.section, styles.sectionTopGap]}>
+          <View style={styles.row}>
+            <View style={styles.rowContent}>
+              <Text style={styles.rowLabel}>Floating mic button</Text>
+              <Text style={styles.rowSublabel}>{floatingVoiceEnabled ? 'On' : 'Off'}</Text>
+            </View>
+            <Switch
+              accessibilityLabel="Floating mic button"
+              value={floatingVoiceEnabled}
+              onValueChange={setFloatingVoiceEnabled}
+              trackColor={{ false: colors.bgRaised, true: colors.textSecondary }}
+              thumbColor={colors.textPrimary}
+            />
+          </View>
+          <Pressable
+            style={[styles.row, styles.rowDivider]}
+            disabled={!floatingVoiceEnabled}
+            onPress={() => setShowSizePicker(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Button size"
+          >
+            <View style={styles.rowContent}>
+              <Text style={[styles.rowLabel, !floatingVoiceEnabled && styles.rowLabelDisabled]}>
+                Button size
+              </Text>
+              <Text style={styles.rowSublabel}>{floatingVoiceSizePercent}%</Text>
+            </View>
+            <ChevronRight size={18} color={colors.textMuted} />
+          </Pressable>
+        </View>
       </ScrollView>
-    </View>
+
+      <PickerModal<VoiceButtonSizeOptionValue>
+        visible={showSizePicker}
+        title="Button size"
+        options={VOICE_BUTTON_SIZE_OPTIONS}
+        selected={`${floatingVoiceSizePercent}` as VoiceButtonSizeOptionValue}
+        onSelect={(value) =>
+          setFloatingVoiceSizePercent(Number(value) as FloatingVoiceButtonSizePercent)
+        }
+        onClose={() => setShowSizePicker(false)}
+      />
+    </GestureHandlerRootView>
   )
 }
 
@@ -122,5 +195,12 @@ const styles = StyleSheet.create({
     fontSize: typography.bodySize - 2,
     color: colors.textSecondary,
     marginTop: 2
+  },
+  rowDivider: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.borderSubtle
+  },
+  rowLabelDisabled: {
+    color: colors.textMuted
   }
 })

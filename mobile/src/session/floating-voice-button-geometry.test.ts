@@ -1,0 +1,157 @@
+import { describe, expect, it } from 'vitest'
+import {
+  DEFAULT_FLOATING_VOICE_BUTTON_POSITION,
+  DEFAULT_FLOATING_VOICE_BUTTON_SIZE_PERCENT,
+  clampFloatingVoiceButtonPosition,
+  denormalizeFloatingVoiceButtonPosition,
+  floatingVoiceButtonDiameter,
+  isFloatingVoiceButtonDragTap,
+  isFloatingVoiceButtonNormalizedPosition,
+  isFloatingVoiceButtonSizePercent,
+  normalizeFloatingVoiceButtonPosition
+} from './floating-voice-button-geometry'
+
+const INSETS = { top: 10, bottom: 20, left: 0, right: 0 }
+
+describe('floatingVoiceButtonDiameter', () => {
+  it('scales the inline button size by percent', () => {
+    expect(floatingVoiceButtonDiameter(100)).toBe(34)
+    expect(floatingVoiceButtonDiameter(DEFAULT_FLOATING_VOICE_BUTTON_SIZE_PERCENT)).toBe(68)
+    expect(floatingVoiceButtonDiameter(50)).toBe(17)
+  })
+})
+
+describe('isFloatingVoiceButtonSizePercent', () => {
+  it('accepts only the discrete picker steps', () => {
+    expect(isFloatingVoiceButtonSizePercent(200)).toBe(true)
+    expect(isFloatingVoiceButtonSizePercent(50)).toBe(true)
+    expect(isFloatingVoiceButtonSizePercent(300)).toBe(true)
+    expect(isFloatingVoiceButtonSizePercent(60)).toBe(false)
+    expect(isFloatingVoiceButtonSizePercent('200')).toBe(false)
+    expect(isFloatingVoiceButtonSizePercent(undefined)).toBe(false)
+  })
+})
+
+describe('clampFloatingVoiceButtonPosition', () => {
+  it('leaves an in-bounds position untouched', () => {
+    const result = clampFloatingVoiceButtonPosition({
+      x: 100,
+      y: 200,
+      diameter: 68,
+      containerWidth: 400,
+      containerHeight: 800,
+      insets: INSETS
+    })
+    expect(result).toEqual({ x: 100, y: 200 })
+  })
+
+  it('clamps past the right/bottom edge, respecting insets and diameter', () => {
+    const result = clampFloatingVoiceButtonPosition({
+      x: 10_000,
+      y: 10_000,
+      diameter: 68,
+      containerWidth: 400,
+      containerHeight: 800,
+      insets: INSETS
+    })
+    expect(result).toEqual({ x: 400 - 68, y: 800 - 20 - 68 })
+  })
+
+  it('clamps past the top/left edge to the inset corner', () => {
+    const result = clampFloatingVoiceButtonPosition({
+      x: -500,
+      y: -500,
+      diameter: 68,
+      containerWidth: 400,
+      containerHeight: 800,
+      insets: INSETS
+    })
+    expect(result).toEqual({ x: 0, y: 10 })
+  })
+
+  it('never produces a max below min on a container smaller than the button', () => {
+    const result = clampFloatingVoiceButtonPosition({
+      x: 50,
+      y: 50,
+      diameter: 300,
+      containerWidth: 100,
+      containerHeight: 100,
+      insets: INSETS
+    })
+    expect(result.x).toBe(0)
+    expect(result.y).toBe(10)
+  })
+
+  it('falls back to the min corner for a non-finite position', () => {
+    const result = clampFloatingVoiceButtonPosition({
+      x: Number.NaN,
+      y: Number.POSITIVE_INFINITY,
+      diameter: 68,
+      containerWidth: 400,
+      containerHeight: 800,
+      insets: INSETS
+    })
+    expect(result).toEqual({ x: 0, y: 10 })
+  })
+})
+
+describe('normalize/denormalize round trip', () => {
+  it('recovers a clamped position after a container resize (rotation)', () => {
+    const normalized = normalizeFloatingVoiceButtonPosition({
+      x: 350,
+      y: 700,
+      containerWidth: 400,
+      containerHeight: 800
+    })
+    // Rotate: container is now wider than tall.
+    const rotated = denormalizeFloatingVoiceButtonPosition({
+      position: normalized,
+      diameter: 68,
+      containerWidth: 800,
+      containerHeight: 400,
+      insets: INSETS
+    })
+    expect(rotated.x).toBeCloseTo(700)
+    expect(rotated.y).toBeLessThanOrEqual(400 - INSETS.bottom - 68)
+  })
+
+  it('the documented default position clamps to a valid on-screen spot', () => {
+    const pos = denormalizeFloatingVoiceButtonPosition({
+      position: DEFAULT_FLOATING_VOICE_BUTTON_POSITION,
+      diameter: 68,
+      containerWidth: 390,
+      containerHeight: 844,
+      insets: { top: 47, bottom: 34, left: 0, right: 0 }
+    })
+    expect(pos.x).toBeGreaterThanOrEqual(0)
+    expect(pos.x).toBeLessThanOrEqual(390 - 68)
+    expect(pos.y).toBeGreaterThanOrEqual(47)
+    expect(pos.y).toBeLessThanOrEqual(844 - 34 - 68)
+  })
+})
+
+describe('isFloatingVoiceButtonNormalizedPosition', () => {
+  it('validates shape and range', () => {
+    expect(isFloatingVoiceButtonNormalizedPosition({ xFrac: 0.5, yFrac: 0.5 })).toBe(true)
+    expect(isFloatingVoiceButtonNormalizedPosition({ xFrac: 1, yFrac: 0 })).toBe(true)
+    expect(isFloatingVoiceButtonNormalizedPosition({ xFrac: 1.5, yFrac: 0 })).toBe(false)
+    expect(isFloatingVoiceButtonNormalizedPosition({ xFrac: -0.1, yFrac: 0 })).toBe(false)
+    expect(isFloatingVoiceButtonNormalizedPosition({ xFrac: '0.5', yFrac: 0.5 })).toBe(false)
+    expect(isFloatingVoiceButtonNormalizedPosition(null)).toBe(false)
+    expect(isFloatingVoiceButtonNormalizedPosition(undefined)).toBe(false)
+  })
+})
+
+describe('isFloatingVoiceButtonDragTap', () => {
+  it('treats sub-threshold movement as a tap', () => {
+    expect(isFloatingVoiceButtonDragTap(0, 0)).toBe(true)
+    expect(isFloatingVoiceButtonDragTap(5, 5)).toBe(true)
+    expect(isFloatingVoiceButtonDragTap(-8, 2)).toBe(true)
+  })
+
+  it('treats movement past the threshold as a drag', () => {
+    expect(isFloatingVoiceButtonDragTap(20, 0)).toBe(false)
+    expect(isFloatingVoiceButtonDragTap(0, -30)).toBe(false)
+    expect(isFloatingVoiceButtonDragTap(9, 9)).toBe(false) // hypot ≈ 12.7
+  })
+})
