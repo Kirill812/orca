@@ -7,6 +7,7 @@ import { styles } from './mobile-session-styles'
 import type { MobileSessionController } from './use-mobile-session-controller'
 import { MobileSessionActiveContent } from './MobileSessionActiveContent'
 import { MobileSessionCommandDock } from './MobileSessionCommandDock'
+import { FloatingVoiceButtonOverlay } from './FloatingVoiceButton'
 
 export function MobileSessionContentRow({ controller }: { controller: MobileSessionController }) {
   const {
@@ -21,7 +22,16 @@ export function MobileSessionContentRow({ controller }: { controller: MobileSess
     createWarning,
     handleFileOpenStart,
     handleOpenedFileDiff,
-    handleSessionContentRowLayout
+    handleSessionContentRowLayout,
+    floatingVoiceEnabled,
+    floatingVoiceSizePercent,
+    dictation,
+    dictationMode,
+    canSend,
+    handleDictationToggle,
+    handleDictationPressIn,
+    handleDictationPressOut,
+    cancelDictation
   } = controller
   return (
     <View style={styles.sessionContentRow} onLayout={handleSessionContentRowLayout}>
@@ -43,6 +53,25 @@ export function MobileSessionContentRow({ controller }: { controller: MobileSess
         <MobileSessionActiveContent controller={controller} />
         {/* Why: translate instead of resize so keyboard toggles don't trigger a server-side PTY viewport change. */}
         <MobileSessionCommandDock controller={controller} />
+        {/* Floats above whichever content is showing (terminal or Chat UI) — one
+            overlay covers both, since this row is the shared container for the
+            whole session route. */}
+        <FloatingVoiceButtonOverlay
+          visible={floatingVoiceEnabled}
+          sizePercent={floatingVoiceSizePercent}
+          mode={dictationMode}
+          active={dictation.isRecording || dictation.isStarting}
+          processing={dictation.isProcessing}
+          // ponytail: proxies both screens' disabled state off the terminal's
+          // canSend; the Chat UI composer's own lock reason isn't consulted.
+          // Upgrade if a disconnected chat session needs the floating button
+          // disabled independently of the terminal dock's send gate.
+          disabled={!canSend}
+          onTap={handleDictationToggle}
+          onPressIn={handleDictationPressIn}
+          onPressOut={handleDictationPressOut}
+          onLongPressCancel={cancelDictation}
+        />
       </View>
       {canDockPanel && activePanel !== null && (
         <SessionDockColumn

@@ -31,6 +31,7 @@ export function MobileSessionActiveContent({
     setCreateError,
     setShowCreateTabDrawer,
     dictationMode,
+    floatingVoiceEnabled,
     toastMessage,
     terminalFrameHeightRef,
     setTerminalFrameWidth,
@@ -235,6 +236,7 @@ export function MobileSessionActiveContent({
         controller={nativeChatController}
         onOpenFile={handleNativeChatFileTap}
         images={nativeChatImages}
+        hideMicButton={floatingVoiceEnabled}
         onMicPress={handleDictationToggle}
         micActive={dictation.isRecording}
         dictationMode={dictationMode}

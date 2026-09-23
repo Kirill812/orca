@@ -1,6 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { persistMirrored } from './mirrored-storage-keys'
 import { TERMINAL_TEXT_SCALES } from '../terminal/terminal-text-scales'
+import {
+  DEFAULT_FLOATING_VOICE_BUTTON_SIZE_PERCENT,
+  isFloatingVoiceButtonNormalizedPosition,
+  isFloatingVoiceButtonSizePercent,
+  type FloatingVoiceButtonNormalizedPosition,
+  type FloatingVoiceButtonSizePercent
+} from '../session/floating-voice-button-geometry'
 
 const PINS_PREFIX = 'orca:pins:'
 // Consent to the push service is separate from the old socket notification choice.
@@ -309,6 +316,69 @@ export async function loadTerminalLinkOpenMode(): Promise<MobileTerminalLinkOpen
 
 export async function saveTerminalLinkOpenMode(mode: MobileTerminalLinkOpenMode): Promise<void> {
   await persistMirrored(TERMINAL_LINK_OPEN_MODE_KEY, mode)
+}
+
+const FLOATING_VOICE_BUTTON_ENABLED_KEY = 'orca:floatingVoiceButtonEnabled'
+
+// Why default true: the user wants a floating mic on both the terminal and
+// Chat UI screens out of the box; only an explicit "false" write turns it off.
+export async function loadFloatingVoiceButtonEnabled(): Promise<boolean> {
+  try {
+    const raw = await AsyncStorage.getItem(FLOATING_VOICE_BUTTON_ENABLED_KEY)
+    return raw === null ? true : raw === 'true'
+  } catch {
+    return true
+  }
+}
+
+export async function saveFloatingVoiceButtonEnabled(enabled: boolean): Promise<void> {
+  await persistMirrored(FLOATING_VOICE_BUTTON_ENABLED_KEY, String(enabled))
+}
+
+const FLOATING_VOICE_BUTTON_SIZE_PERCENT_KEY = 'orca:floatingVoiceButtonSizePercent'
+
+export async function loadFloatingVoiceButtonSizePercent(): Promise<FloatingVoiceButtonSizePercent> {
+  try {
+    const raw = await AsyncStorage.getItem(FLOATING_VOICE_BUTTON_SIZE_PERCENT_KEY)
+    if (raw === null) {
+      return DEFAULT_FLOATING_VOICE_BUTTON_SIZE_PERCENT
+    }
+    const parsed = Number(raw)
+    return isFloatingVoiceButtonSizePercent(parsed)
+      ? parsed
+      : DEFAULT_FLOATING_VOICE_BUTTON_SIZE_PERCENT
+  } catch {
+    return DEFAULT_FLOATING_VOICE_BUTTON_SIZE_PERCENT
+  }
+}
+
+export async function saveFloatingVoiceButtonSizePercent(
+  percent: FloatingVoiceButtonSizePercent
+): Promise<void> {
+  await persistMirrored(FLOATING_VOICE_BUTTON_SIZE_PERCENT_KEY, String(percent))
+}
+
+const FLOATING_VOICE_BUTTON_POSITION_KEY = 'orca:floatingVoiceButtonPosition'
+
+// Null means "never dragged" — the caller falls back to its own default corner
+// rather than this module owning a screen-shaped default.
+export async function loadFloatingVoiceButtonPosition(): Promise<FloatingVoiceButtonNormalizedPosition | null> {
+  try {
+    const raw = await AsyncStorage.getItem(FLOATING_VOICE_BUTTON_POSITION_KEY)
+    if (!raw) {
+      return null
+    }
+    const parsed: unknown = JSON.parse(raw)
+    return isFloatingVoiceButtonNormalizedPosition(parsed) ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+export async function saveFloatingVoiceButtonPosition(
+  position: FloatingVoiceButtonNormalizedPosition
+): Promise<void> {
+  await persistMirrored(FLOATING_VOICE_BUTTON_POSITION_KEY, JSON.stringify(position))
 }
 
 function stringArray(value: unknown): string[] {
