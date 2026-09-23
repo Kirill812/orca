@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useFocusEffect } from 'expo-router'
 import {
+  loadFloatingVoiceButtonAutoSend,
   loadFloatingVoiceButtonEnabled,
   loadFloatingVoiceButtonOpacityPercent,
   loadFloatingVoiceButtonSizePercent,
+  saveFloatingVoiceButtonAutoSend,
   saveFloatingVoiceButtonEnabled,
   saveFloatingVoiceButtonOpacityPercent,
   saveFloatingVoiceButtonSizePercent
@@ -25,6 +27,7 @@ export function useFloatingVoiceButtonSessionSettings(): {
   enabled: boolean
   sizePercent: FloatingVoiceButtonSizePercent
   opacityPercent: FloatingVoiceButtonOpacityPercent
+  autoSend: boolean
 } {
   const [enabled, setEnabled] = useState(true)
   const [sizePercent, setSizePercent] = useState<FloatingVoiceButtonSizePercent>(
@@ -33,6 +36,7 @@ export function useFloatingVoiceButtonSessionSettings(): {
   const [opacityPercent, setOpacityPercent] = useState<FloatingVoiceButtonOpacityPercent>(
     DEFAULT_FLOATING_VOICE_BUTTON_OPACITY_PERCENT
   )
+  const [autoSend, setAutoSend] = useState(false)
 
   useFocusEffect(
     useCallback(() => {
@@ -52,13 +56,18 @@ export function useFloatingVoiceButtonSessionSettings(): {
           setOpacityPercent(value)
         }
       })
+      void loadFloatingVoiceButtonAutoSend().then((value) => {
+        if (active) {
+          setAutoSend(value)
+        }
+      })
       return () => {
         active = false
       }
     }, [])
   )
 
-  return { enabled, sizePercent, opacityPercent }
+  return { enabled, sizePercent, opacityPercent, autoSend }
 }
 
 /** Settings screen's own load/save state — separate from the session hook
@@ -67,10 +76,12 @@ export function useFloatingVoiceButtonSettingsScreenState(): {
   enabled: boolean
   sizePercent: FloatingVoiceButtonSizePercent
   opacityPercent: FloatingVoiceButtonOpacityPercent
+  autoSend: boolean
   loaded: boolean
   setEnabled: (next: boolean) => void
   setSizePercent: (next: FloatingVoiceButtonSizePercent) => void
   setOpacityPercent: (next: FloatingVoiceButtonOpacityPercent) => void
+  setAutoSend: (next: boolean) => void
 } {
   const [enabled, setEnabledState] = useState(true)
   const [sizePercent, setSizePercentState] = useState<FloatingVoiceButtonSizePercent>(
@@ -79,6 +90,7 @@ export function useFloatingVoiceButtonSettingsScreenState(): {
   const [opacityPercent, setOpacityPercentState] = useState<FloatingVoiceButtonOpacityPercent>(
     DEFAULT_FLOATING_VOICE_BUTTON_OPACITY_PERCENT
   )
+  const [autoSend, setAutoSendState] = useState(false)
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
@@ -86,14 +98,16 @@ export function useFloatingVoiceButtonSettingsScreenState(): {
     void Promise.all([
       loadFloatingVoiceButtonEnabled(),
       loadFloatingVoiceButtonSizePercent(),
-      loadFloatingVoiceButtonOpacityPercent()
-    ]).then(([loadedEnabled, loadedSizePercent, loadedOpacityPercent]) => {
+      loadFloatingVoiceButtonOpacityPercent(),
+      loadFloatingVoiceButtonAutoSend()
+    ]).then(([loadedEnabled, loadedSizePercent, loadedOpacityPercent, loadedAutoSend]) => {
       if (!active) {
         return
       }
       setEnabledState(loadedEnabled)
       setSizePercentState(loadedSizePercent)
       setOpacityPercentState(loadedOpacityPercent)
+      setAutoSendState(loadedAutoSend)
       setLoaded(true)
     })
     return () => {
@@ -116,13 +130,20 @@ export function useFloatingVoiceButtonSettingsScreenState(): {
     void saveFloatingVoiceButtonOpacityPercent(next)
   }, [])
 
+  const setAutoSend = useCallback((next: boolean) => {
+    setAutoSendState(next)
+    void saveFloatingVoiceButtonAutoSend(next)
+  }, [])
+
   return {
     enabled,
     sizePercent,
     opacityPercent,
+    autoSend,
     loaded,
     setEnabled,
     setSizePercent,
-    setOpacityPercent
+    setOpacityPercent,
+    setAutoSend
   }
 }

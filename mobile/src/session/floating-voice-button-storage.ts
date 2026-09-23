@@ -76,6 +76,23 @@ export async function saveFloatingVoiceButtonOpacityPercent(
   await persistMirrored(FLOATING_VOICE_BUTTON_OPACITY_PERCENT_KEY, String(percent))
 }
 
+const FLOATING_VOICE_BUTTON_AUTO_SEND_KEY = 'orca:floatingVoiceButtonAutoSend'
+
+// Why default false: auto-submitting a transcript is a bigger behavior change
+// than the other prefs (it fires a Send the user didn't press) — opt-in only.
+export async function loadFloatingVoiceButtonAutoSend(): Promise<boolean> {
+  try {
+    const raw = await AsyncStorage.getItem(FLOATING_VOICE_BUTTON_AUTO_SEND_KEY)
+    return raw === 'true'
+  } catch {
+    return false
+  }
+}
+
+export async function saveFloatingVoiceButtonAutoSend(enabled: boolean): Promise<void> {
+  await persistMirrored(FLOATING_VOICE_BUTTON_AUTO_SEND_KEY, String(enabled))
+}
+
 const FLOATING_VOICE_BUTTON_POSITION_KEY = 'orca:floatingVoiceButtonPosition'
 
 // Null means "never dragged" — the caller falls back to its own default corner

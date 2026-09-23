@@ -42,9 +42,15 @@ export function useMobileSessionController() {
   )
   const sendLiveTerminalInput = (handle: string, bytes: string) =>
     feedbackCapabilities.sendLiveTerminalInputRef.current(handle, bytes)
+  const sendBufferedTerminalInput = (text: string) =>
+    feedbackCapabilities.sendBufferedTerminalInputRef.current(text)
   const nativeChatDictation = Object.assign(
     feedbackCapabilities,
-    useMobileSessionNativeChatDictation(feedbackCapabilities, sendLiveTerminalInput)
+    useMobileSessionNativeChatDictation(
+      feedbackCapabilities,
+      sendLiveTerminalInput,
+      sendBufferedTerminalInput
+    )
   )
   const subscriptionFoundation = Object.assign(
     nativeChatDictation,

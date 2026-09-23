@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { View, Text, StyleSheet, Pressable, ScrollView, Switch } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -14,6 +14,7 @@ import {
   type FloatingVoiceButtonSizePercent
 } from '../session/floating-voice-button-geometry'
 import { PickerModal, type PickerOption } from '../components/PickerModal'
+import type { VoiceSettingsOperations } from './voice-settings-operations'
 
 // PickerModal is string-keyed; picker values are the percent as a string,
 // mapped back to the numeric percent on select.
@@ -32,7 +33,22 @@ const VOICE_BUTTON_OPACITY_OPTIONS: PickerOption<VoiceButtonOpacityOptionValue>[
     label: percent === 100 ? `${percent}% (default)` : `${percent}%`
   }))
 
-export default function NativeChatSettingsScreen({ onBack }: { onBack?: () => void }) {
+// Same dictationMode ('toggle' | 'hold') the Voice settings screen edits — this
+// is deliberately NOT a separate preference; both screens read/write it
+// through the same VoiceSettingsOperations so they can never disagree.
+type DictationModeValue = 'toggle' | 'hold'
+const DICTATION_BEHAVIOUR_OPTIONS: PickerOption<DictationModeValue>[] = [
+  { value: 'hold', label: 'Hold to talk' },
+  { value: 'toggle', label: 'Tap to start, tap to stop' }
+]
+
+export default function NativeChatSettingsScreen({
+  onBack,
+  voiceOperations = null
+}: {
+  onBack?: () => void
+  voiceOperations?: VoiceSettingsOperations | null
+}) {
   const router = useRouter()
   const insets = useSafeAreaInsets()
 
@@ -43,12 +59,36 @@ export default function NativeChatSettingsScreen({ onBack }: { onBack?: () => vo
     enabled: floatingVoiceEnabled,
     sizePercent: floatingVoiceSizePercent,
     opacityPercent: floatingVoiceOpacityPercent,
+    autoSend: floatingVoiceAutoSend,
     setEnabled: setFloatingVoiceEnabled,
     setSizePercent: setFloatingVoiceSizePercent,
-    setOpacityPercent: setFloatingVoiceOpacityPercent
+    setOpacityPercent: setFloatingVoiceOpacityPercent,
+    setAutoSend: setFloatingVoiceAutoSend
   } = useFloatingVoiceButtonSettingsScreenState()
   const [showSizePicker, setShowSizePicker] = useState(false)
   const [showOpacityPicker, setShowOpacityPicker] = useState(false)
+  const [showBehaviourPicker, setShowBehaviourPicker] = useState(false)
+  const [dictationMode, setDictationMode] = useState<DictationModeValue>('hold')
+
+  useEffect(() => {
+    let active = true
+    if (!voiceOperations) {
+      return
+    }
+    void voiceOperations.load().then((setup) => {
+      if (active && (setup.dictationMode === 'toggle' || setup.dictationMode === 'hold')) {
+        setDictationMode(setup.dictationMode)
+      }
+    })
+    return () => {
+      active = false
+    }
+  }, [voiceOperations])
+
+  const handleBehaviourSelect = (value: DictationModeValue) => {
+    setDictationMode(value)
+    void voiceOperations?.configure({ dictationMode: value })
+  }
 
   return (
     <GestureHandlerRootView style={[styles.container, { paddingTop: insets.top + spacing.sm }]}>
@@ -139,6 +179,41 @@ export default function NativeChatSettingsScreen({ onBack }: { onBack?: () => vo
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </Pressable>
+          <Pressable
+            style={[styles.row, styles.rowDivider]}
+            disabled={!voiceOperations}
+            onPress={() => setShowBehaviourPicker(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Behaviour"
+          >
+            <View style={styles.rowContent}>
+              <Text style={[styles.rowLabel, !voiceOperations && styles.rowLabelDisabled]}>
+                Behaviour
+              </Text>
+              <Text style={styles.rowSublabel}>
+                {voiceOperations
+                  ? (DICTATION_BEHAVIOUR_OPTIONS.find((o) => o.value === dictationMode)?.label ??
+                    dictationMode)
+                  : 'Connect to a host to change this'}
+              </Text>
+            </View>
+            <ChevronRight size={18} color={colors.textMuted} />
+          </Pressable>
+          <View style={[styles.row, styles.rowDivider]}>
+            <View style={styles.rowContent}>
+              <Text style={styles.rowLabel}>Send automatically</Text>
+              <Text style={styles.rowSublabel}>
+                Submit the recognised text as soon as dictation finishes, without pressing Send.
+              </Text>
+            </View>
+            <Switch
+              accessibilityLabel="Send automatically"
+              value={floatingVoiceAutoSend}
+              onValueChange={setFloatingVoiceAutoSend}
+              trackColor={{ false: colors.bgRaised, true: colors.textSecondary }}
+              thumbColor={colors.textPrimary}
+            />
+          </View>
         </View>
       </ScrollView>
 
@@ -162,6 +237,15 @@ export default function NativeChatSettingsScreen({ onBack }: { onBack?: () => vo
           setFloatingVoiceOpacityPercent(Number(value) as FloatingVoiceButtonOpacityPercent)
         }
         onClose={() => setShowOpacityPicker(false)}
+      />
+
+      <PickerModal<DictationModeValue>
+        visible={showBehaviourPicker}
+        title="Behaviour"
+        options={DICTATION_BEHAVIOUR_OPTIONS}
+        selected={dictationMode}
+        onSelect={handleBehaviourSelect}
+        onClose={() => setShowBehaviourPicker(false)}
       />
     </GestureHandlerRootView>
   )
