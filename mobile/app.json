@@ -82,7 +82,6 @@
       "expo-router",
       "expo-notifications",
       "./plugins/android-respect-rotation-lock.js",
-      "./plugins/android-align-display-density.js",
       [
         "expo-splash-screen",
         {
