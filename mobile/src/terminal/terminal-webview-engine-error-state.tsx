@@ -85,7 +85,7 @@ export function TerminalWebViewEngineErrorOverlay({
         {message}
       </Text>
       <Pressable accessibilityRole="button" style={styles.reloadButton} onPress={onReload}>
-        <RefreshCw size={16} color={colors.terminalBg} />
+        <RefreshCw size={16} color={colors.onFill} />
         <Text style={styles.reloadButtonText}>Reload</Text>
       </Pressable>
     </View>
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceBright
   },
   reloadButtonText: {
-    color: colors.terminalBg,
+    color: colors.onFill,
     fontSize: 14,
     fontWeight: '700'
   }
