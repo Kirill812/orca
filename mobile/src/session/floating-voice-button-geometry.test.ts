@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  DEFAULT_FLOATING_VOICE_BUTTON_OPACITY_PERCENT,
   DEFAULT_FLOATING_VOICE_BUTTON_POSITION,
   DEFAULT_FLOATING_VOICE_BUTTON_SIZE_PERCENT,
   clampFloatingVoiceButtonPosition,
@@ -7,6 +8,7 @@ import {
   floatingVoiceButtonDiameter,
   isFloatingVoiceButtonDragTap,
   isFloatingVoiceButtonNormalizedPosition,
+  isFloatingVoiceButtonOpacityPercent,
   isFloatingVoiceButtonSizePercent,
   normalizeFloatingVoiceButtonPosition
 } from './floating-voice-button-geometry'
@@ -29,6 +31,25 @@ describe('isFloatingVoiceButtonSizePercent', () => {
     expect(isFloatingVoiceButtonSizePercent(60)).toBe(false)
     expect(isFloatingVoiceButtonSizePercent('200')).toBe(false)
     expect(isFloatingVoiceButtonSizePercent(undefined)).toBe(false)
+  })
+})
+
+describe('isFloatingVoiceButtonOpacityPercent', () => {
+  it('accepts only the discrete picker steps', () => {
+    expect(isFloatingVoiceButtonOpacityPercent(DEFAULT_FLOATING_VOICE_BUTTON_OPACITY_PERCENT)).toBe(
+      true
+    )
+    expect(isFloatingVoiceButtonOpacityPercent(5)).toBe(true)
+    expect(isFloatingVoiceButtonOpacityPercent(10)).toBe(true)
+    expect(isFloatingVoiceButtonOpacityPercent(25)).toBe(true)
+    expect(isFloatingVoiceButtonOpacityPercent(50)).toBe(true)
+    expect(isFloatingVoiceButtonOpacityPercent(75)).toBe(true)
+    expect(isFloatingVoiceButtonOpacityPercent(0)).toBe(false)
+    expect(isFloatingVoiceButtonOpacityPercent(60)).toBe(false)
+    expect(isFloatingVoiceButtonOpacityPercent(101)).toBe(false)
+    expect(isFloatingVoiceButtonOpacityPercent('100')).toBe(false)
+    expect(isFloatingVoiceButtonOpacityPercent(undefined)).toBe(false)
+    expect(isFloatingVoiceButtonOpacityPercent(null)).toBe(false)
   })
 })
 
