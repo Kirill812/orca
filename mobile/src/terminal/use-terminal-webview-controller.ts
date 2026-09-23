@@ -16,7 +16,10 @@ import { createTerminalWriteCoalescer } from './terminal-write-coalescer'
 import { isLightTheme } from '../theme/mobile-theme'
 import { LIGHT_TERMINAL_THEME } from './terminal-webview-html/theme'
 
-const LIGHT_TERMINAL_THEME_PAYLOAD: MobileTerminalTheme = { mode: 'light', theme: LIGHT_TERMINAL_THEME }
+const LIGHT_TERMINAL_THEME_PAYLOAD: MobileTerminalTheme = {
+  mode: 'light',
+  theme: LIGHT_TERMINAL_THEME
+}
 
 /**
  * Everything `TerminalWebView` does that is not about `react-native-webview`.

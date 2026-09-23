@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { darkColors, lightColors } from './mobile-theme'
+import {
+  darkColors,
+  highContrastDarkColors,
+  highContrastLightColors,
+  lightColors
+} from './mobile-theme'
 
 function channelLuminance(channel: number): number {
   const value = channel / 255
@@ -25,7 +30,9 @@ function contrastRatio(foreground: string, background: string): number {
 
 describe.each([
   ['dark', darkColors],
-  ['light', lightColors]
+  ['light', lightColors],
+  ['high-contrast light', highContrastLightColors],
+  ['high-contrast dark', highContrastDarkColors]
 ] as const)('mobile text contrast (%s)', (_name, colors) => {
   it('keeps muted text readable on every standard surface', () => {
     for (const surface of [colors.bgBase, colors.bgPanel, colors.bgRaised]) {
@@ -42,6 +49,31 @@ describe.each([
   it('keeps status colours readable on the base surface', () => {
     for (const status of [colors.statusGreen, colors.statusRed, colors.accentBlue]) {
       expect(contrastRatio(status, colors.bgBase)).toBeGreaterThanOrEqual(3)
+    }
+  })
+})
+
+describe('high contrast', () => {
+  it('uses exact 16-level greyscale steps for every neutral surface, border and text', () => {
+    for (const palette of [highContrastLightColors, highContrastDarkColors]) {
+      const neutrals = [
+        palette.bgBase,
+        palette.bgPanel,
+        palette.bgRaised,
+        palette.borderSubtle,
+        palette.textPrimary,
+        palette.textSecondary,
+        palette.textMuted
+      ]
+      for (const hex of neutrals) {
+        expect(hex).toMatch(/^#([0-9a-f])\1{5}$/)
+      }
+    }
+  })
+
+  it('keeps borders clearly visible on the base surface', () => {
+    for (const palette of [highContrastLightColors, highContrastDarkColors]) {
+      expect(contrastRatio(palette.borderSubtle, palette.bgBase)).toBeGreaterThanOrEqual(7)
     }
   })
 })
