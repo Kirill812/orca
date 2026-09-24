@@ -220,7 +220,13 @@ function FloatingVoiceButtonDraggable({
   const opacity = (disabled ? 0.45 : 1) * (opacityPercent / 100)
 
   return (
-    <GestureHandlerRootView style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
+    // Why the root view is only as big as the button: there is no app-wide GestureHandlerRootView,
+    // so this one is a real gesture root, and on Android a root claims every touch inside its
+    // bounds despite pointerEvents="box-none". Full-screen, it swallowed taps meant for the Chat UI
+    // prompt field underneath (no caret, no keyboard).
+    <GestureHandlerRootView
+      style={[styles.root, { left: pos.x, top: pos.y, width: diameter, height: diameter }]}
+    >
       <GestureDetector gesture={pan}>
         <View
           accessibilityRole="button"
@@ -237,8 +243,6 @@ function FloatingVoiceButtonDraggable({
               width: diameter,
               height: diameter,
               borderRadius: diameter / 2,
-              left: pos.x,
-              top: pos.y,
               opacity
             },
             active && styles.buttonActive
@@ -266,8 +270,10 @@ function FloatingVoiceButtonDraggable({
 const styles = StyleSheet.create({
   // Outline-only per the design brief: no fill, so the e-ink high-contrast
   // pass (which rewrites background/border colors) has nothing to invert.
+  root: {
+    position: 'absolute'
+  },
   button: {
-    position: 'absolute',
     backgroundColor: 'transparent',
     borderWidth: 2,
     borderColor: colors.textPrimary,
