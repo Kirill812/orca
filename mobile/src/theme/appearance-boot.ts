@@ -1,5 +1,4 @@
 import { Appearance, StyleSheet } from 'react-native'
-import './boot-globals'
 import { readAppearancePrefs } from './appearance-prefs'
 import { outlineFilledButtons } from './high-contrast-outline'
 import { highContrastDarkColors, highContrastLightColors } from './palettes'

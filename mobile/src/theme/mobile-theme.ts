@@ -2,7 +2,6 @@
 // palette for light-mode devices (and e-ink readers, where a dark UI is unusable).
 // All screen files should import from here instead of using inline hex values.
 
-import './boot-globals'
 import {
   darkColors,
   highContrastDarkColors,
