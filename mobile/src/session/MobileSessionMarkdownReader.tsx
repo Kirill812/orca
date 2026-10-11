@@ -1,26 +1,20 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { View, Text, Pressable, ActivityIndicator } from 'react-native'
 import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler'
 import { RefreshCw, Type } from 'lucide-react-native'
 import { MobileRichMarkdownEditor } from '../components/MobileRichMarkdownEditor'
-import { PickerModal, type PickerOption } from '../components/PickerModal'
-import { loadMarkdownTextScale, saveMarkdownTextScale } from '../files/markdown-text-scale-storage'
-import { MARKDOWN_TEXT_SCALES } from '../files/markdown-text-scales'
+import { PickerModal } from '../components/PickerModal'
+import {
+  TEXT_SIZE_OPTIONS,
+  type TextSizeValue,
+  useMarkdownTextScale
+} from '../files/use-markdown-text-scale'
 import { useMarkdownTextScalePinchGesture } from '../files/use-markdown-text-scale-pinch-gesture'
 import { resolveMarkdownFloatingActionsBottom } from './markdown-floating-actions-layout'
 import { markdownReaderStatusText } from './mobile-markdown-reader-status'
 import { colors, spacing } from '../theme/mobile-theme'
 import { styles } from './mobile-session-styles'
 import type { MarkdownDocState } from './mobile-session-route-types'
-
-type TextSizeValue = string
-
-const TEXT_SIZE_OPTIONS: (PickerOption<TextSizeValue> & { scale: number })[] =
-  MARKDOWN_TEXT_SCALES.map((scale) => ({
-    value: String(scale),
-    label: `${Math.round(scale * 100)}%`,
-    scale
-  }))
 
 export function MarkdownReader({
   documentId,
@@ -45,26 +39,8 @@ export function MarkdownReader({
   const [webviewKeyboardInset, setWebviewKeyboardInset] = useState(0)
   const effectiveKeyboardLift = Math.max(keyboardLift, webviewKeyboardInset)
 
-  // Why one persisted value: shared with the file viewer's Markdown preview via
-  // `markdown-text-scale-storage`, so changing size in either place applies to both.
-  const [textScale, setTextScale] = useState(1)
+  const { textScale, setLiveScale, commitTextScale, selectTextSize } = useMarkdownTextScale()
   const [textSizePickerOpen, setTextSizePickerOpen] = useState(false)
-  useEffect(() => {
-    void loadMarkdownTextScale().then(setTextScale)
-  }, [])
-  const commitTextScale = useCallback((scale: number) => {
-    setTextScale(scale)
-    void saveMarkdownTextScale(scale)
-  }, [])
-  const selectTextSize = useCallback(
-    (value: TextSizeValue) => {
-      const option = TEXT_SIZE_OPTIONS.find((o) => o.value === value)
-      if (option) {
-        commitTextScale(option.scale)
-      }
-    },
-    [commitTextScale]
-  )
   // Why RNGH over in-page touch handling: the editor's surface is contenteditable, so text
   // selection/caret placement and link taps must keep working under single-finger touches.
   // `Gesture.Pinch()` on the wrapping View only ever activates once a second touch lands, so it
@@ -75,7 +51,7 @@ export function MarkdownReader({
   // WebView document instead of getting it from RNGH for free.
   const pinchGesture = useMarkdownTextScalePinchGesture(
     textScale,
-    setTextScale,
+    setLiveScale,
     commitTextScale,
     false
   )

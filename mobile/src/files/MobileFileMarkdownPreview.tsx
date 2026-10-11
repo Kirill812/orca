@@ -1,12 +1,11 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Pressable, ScrollView, View } from 'react-native'
 import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler'
 import { Code, Pencil, Type } from 'lucide-react-native'
 import { MobileMarkdown } from '../components/MobileMarkdown'
-import { PickerModal, type PickerOption } from '../components/PickerModal'
+import { PickerModal } from '../components/PickerModal'
 import { colors } from '../theme/mobile-theme'
-import { loadMarkdownTextScale, saveMarkdownTextScale } from './markdown-text-scale-storage'
-import { MARKDOWN_TEXT_SCALES } from './markdown-text-scales'
+import { TEXT_SIZE_OPTIONS, type TextSizeValue, useMarkdownTextScale } from './use-markdown-text-scale'
 import { useMarkdownTextScalePinchGesture } from './use-markdown-text-scale-pinch-gesture'
 import {
   MobileFilePreviewSourceText,
@@ -21,15 +20,6 @@ type Props = {
   byteLength: number
   initialLine?: number
 }
-
-type TextSizeValue = string
-
-const TEXT_SIZE_OPTIONS: (PickerOption<TextSizeValue> & { scale: number })[] =
-  MARKDOWN_TEXT_SCALES.map((scale) => ({
-    value: String(scale),
-    label: `${Math.round(scale * 100)}%`,
-    scale
-  }))
 
 export function MobileFileMarkdownPreview({
   relativePath,
@@ -54,25 +44,9 @@ export function MobileFileMarkdownPreview({
   // Why one persisted value: the toolbar picker and pinch-to-zoom both read and
   // write `textScale` — pinching updates this state live, and the picker jumps
   // straight to a preset, exactly like the terminal's text-size setting.
-  const [textScale, setTextScale] = useState(1)
+  const { textScale, setLiveScale, commitTextScale, selectTextSize } = useMarkdownTextScale()
   const [textSizePickerOpen, setTextSizePickerOpen] = useState(false)
-  useEffect(() => {
-    void loadMarkdownTextScale().then(setTextScale)
-  }, [])
-  const commitTextScale = useCallback((scale: number) => {
-    setTextScale(scale)
-    void saveMarkdownTextScale(scale)
-  }, [])
-  const selectTextSize = useCallback(
-    (value: TextSizeValue) => {
-      const option = TEXT_SIZE_OPTIONS.find((o) => o.value === value)
-      if (option) {
-        commitTextScale(option.scale)
-      }
-    },
-    [commitTextScale]
-  )
-  const pinchGesture = useMarkdownTextScalePinchGesture(textScale, setTextScale, commitTextScale)
+  const pinchGesture = useMarkdownTextScalePinchGesture(textScale, setLiveScale, commitTextScale)
 
   return (
     <View style={styles.modeContainer}>
