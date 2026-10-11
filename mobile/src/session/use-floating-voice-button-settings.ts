@@ -29,7 +29,7 @@ export function useFloatingVoiceButtonSessionSettings(): {
   opacityPercent: FloatingVoiceButtonOpacityPercent
   autoSend: boolean
 } {
-  const [enabled, setEnabled] = useState(true)
+  const [enabled, setEnabled] = useState(false)
   const [sizePercent, setSizePercent] = useState<FloatingVoiceButtonSizePercent>(
     DEFAULT_FLOATING_VOICE_BUTTON_SIZE_PERCENT
   )
@@ -83,7 +83,7 @@ export function useFloatingVoiceButtonSettingsScreenState(): {
   setOpacityPercent: (next: FloatingVoiceButtonOpacityPercent) => void
   setAutoSend: (next: boolean) => void
 } {
-  const [enabled, setEnabledState] = useState(true)
+  const [enabled, setEnabledState] = useState(false)
   const [sizePercent, setSizePercentState] = useState<FloatingVoiceButtonSizePercent>(
     DEFAULT_FLOATING_VOICE_BUTTON_SIZE_PERCENT
   )

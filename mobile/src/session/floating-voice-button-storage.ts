@@ -15,14 +15,14 @@ import {
 
 const FLOATING_VOICE_BUTTON_ENABLED_KEY = 'orca:floatingVoiceButtonEnabled'
 
-// Why default true: the user wants a floating mic on both the terminal and
-// Chat UI screens out of the box; only an explicit "false" write turns it off.
+// Why default false: the floating mic is opt-in; only an explicit "true" write
+// (Settings → Chat UI → Floating mic button) turns it on.
 export async function loadFloatingVoiceButtonEnabled(): Promise<boolean> {
   try {
     const raw = await AsyncStorage.getItem(FLOATING_VOICE_BUTTON_ENABLED_KEY)
-    return raw === null ? true : raw === 'true'
+    return raw === 'true'
   } catch {
-    return true
+    return false
   }
 }
 
