@@ -1,6 +1,6 @@
 import { QrCode } from 'lucide-react-native'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
-import { colors, radii, spacing } from '../theme/mobile-theme'
+import { colors, isHighContrast, isLightTheme, radii, spacing } from '../theme/mobile-theme'
 
 const ONBOARDING_STEPS = [
   {
@@ -118,7 +118,8 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 8,
-    backgroundColor: colors.bgPanel,
+    // Upstream's translucent chip in the default dark theme; a solid token where it would vanish.
+    backgroundColor: isLightTheme || isHighContrast ? colors.bgPanel : 'rgba(255,255,255,0.04)',
     borderWidth: 1,
     borderColor: colors.borderSubtle,
     alignItems: 'center',
