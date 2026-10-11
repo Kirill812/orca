@@ -87,3 +87,10 @@ describe('high contrast', () => {
     }
   })
 })
+
+describe('onFill', () => {
+  it('equals bgBase in the plain dark and light palettes, so their labels are unchanged', () => {
+    expect(darkColors.onFill).toBe(darkColors.bgBase)
+    expect(lightColors.onFill).toBe(lightColors.bgBase)
+  })
+})
