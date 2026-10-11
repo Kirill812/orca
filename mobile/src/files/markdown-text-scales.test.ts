@@ -4,6 +4,7 @@ import {
   MARKDOWN_TEXT_SCALE_MAX,
   MARKDOWN_TEXT_SCALE_MIN,
   MARKDOWN_TEXT_SCALES,
+  quantizeLiveScale,
   snapMarkdownTextScale
 } from './markdown-text-scales'
 
@@ -40,5 +41,12 @@ describe('snapMarkdownTextScale', () => {
   it('clamps out-of-range values before snapping', () => {
     expect(snapMarkdownTextScale(10)).toBe(MARKDOWN_TEXT_SCALE_MAX)
     expect(snapMarkdownTextScale(-1)).toBe(MARKDOWN_TEXT_SCALE_MIN)
+  })
+})
+
+describe('quantizeLiveScale', () => {
+  it('rounds to 0.05 steps', () => {
+    expect(quantizeLiveScale(1.24)).toBe(1.25)
+    expect(quantizeLiveScale(1.01)).toBe(1)
   })
 })

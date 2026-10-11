@@ -6,7 +6,8 @@ import { MobileFileMarkdownPreview } from './MobileFileMarkdownPreview'
 vi.mock('react-native', () => ({
   Pressable: 'Pressable',
   ScrollView: 'ScrollView',
-  View: 'View'
+  View: 'View',
+  Platform: { OS: 'ios' }
 }))
 
 vi.mock('lucide-react-native', () => ({
@@ -46,6 +47,7 @@ vi.mock('./markdown-text-scale-storage', () => ({
 // MobileNativeChatView.test.ts stubs the chainable gesture builder.
 vi.mock('react-native-gesture-handler', () => {
   const chain = {
+    enabled: () => chain,
     runOnJS: () => chain,
     onStart: () => chain,
     onUpdate: () => chain,

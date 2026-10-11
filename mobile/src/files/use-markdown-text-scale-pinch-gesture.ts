@@ -1,7 +1,11 @@
 import { useMemo, useRef } from 'react'
 import { Platform } from 'react-native'
 import { Gesture } from 'react-native-gesture-handler'
-import { clampMarkdownTextScale, snapMarkdownTextScale } from './markdown-text-scales'
+import {
+  clampMarkdownTextScale,
+  quantizeLiveScale,
+  snapMarkdownTextScale
+} from './markdown-text-scales'
 
 /**
  * Pinch-to-zoom for Markdown text size. Mirrors the chat transcript's pinch
@@ -39,7 +43,13 @@ export function useMarkdownTextScalePinchGesture(
         pinchBase.current = scaleRef.current
       })
       .onUpdate((e) => {
-        onLiveScale(clampMarkdownTextScale(pinchBase.current * e.scale))
+        // Why 0.05 steps + skip when unchanged: a raw float every frame re-renders the preview
+        // and injects JS into the editor per frame; quantizing bounds that to a few updates.
+        const next = quantizeLiveScale(clampMarkdownTextScale(pinchBase.current * e.scale))
+        if (next !== scaleRef.current) {
+          scaleRef.current = next
+          onLiveScale(next)
+        }
       })
       .onEnd(() => {
         const snapped = snapMarkdownTextScale(scaleRef.current)

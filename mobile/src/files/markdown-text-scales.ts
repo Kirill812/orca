@@ -24,3 +24,8 @@ export function snapMarkdownTextScale(scale: number): number {
     Math.abs(preset - clamped) < Math.abs(closest - clamped) ? preset : closest
   )
 }
+
+/** Live pinch values move in 0.05 steps; the commit still snaps to a preset. */
+export function quantizeLiveScale(scale: number): number {
+  return Math.round(scale * 20) / 20
+}
