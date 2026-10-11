@@ -19,8 +19,8 @@ export async function loadMarkdownTextScale(): Promise<number> {
   }
 }
 
-// Why plain AsyncStorage, not persistMirrored: unlike the terminal text scale, no WebView
-// shell reads this synchronously on init — the Markdown viewer is plain React Native.
+// Why plain AsyncStorage, not persistMirrored: nothing reads this synchronously on init — the
+// native viewer and the editor WebView both get the value from React props / a post-ready inject.
 export async function saveMarkdownTextScale(scale: number): Promise<void> {
   await AsyncStorage.setItem(MARKDOWN_TEXT_SCALE_KEY, String(scale))
 }

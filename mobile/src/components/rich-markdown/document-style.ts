@@ -56,7 +56,8 @@ export function richMarkdownEditorStyle(): string {
     body { overflow: auto; }
     #editor {
       min-height: 100vh;
-      padding: 18px 16px 112px;
+      /* Why 56px right: clears the native "Aa" text-size button (34px + 8px inset) over the first line. */
+      padding: 18px 56px 112px 16px;
       outline: none;
       font-size: ${editorFontSizeRule()};
       line-height: 1.7;

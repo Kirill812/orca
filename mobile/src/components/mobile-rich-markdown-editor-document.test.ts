@@ -26,8 +26,8 @@ import { RICH_MARKDOWN_EDITOR_DOCUMENT_SCRIPT } from './rich-markdown-editor-doc
  */
 // Re-pinned for the markdown-tab text-size feature: `document-style.ts` grew a
 // `--markdown-text-scale` custom property and a `calc()` font-size rule on `#editor`.
-const DOCUMENT_SHELL_SHA256 = 'c4e8a892ef66920191a997004c3a4e9075b5b110b80633db12a5521bfda9aeef'
-const DOCUMENT_SHELL_BYTES = 5804
+const DOCUMENT_SHELL_SHA256 = 'f39ecf7228115eef07fd914845ed9e9bd860847530b319ad09ed90f679ac488e'
+const DOCUMENT_SHELL_BYTES = 5917
 
 const SCRIPT_OPEN = '  <script>\n'
 const SCRIPT_CLOSE = '\n  </script>'

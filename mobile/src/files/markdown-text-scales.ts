@@ -1,5 +1,5 @@
 /**
- * Text-scale presets for the Markdown file-preview viewer. Mirrors
+ * Text-scale presets for the Markdown viewers (file preview and the session's rich editor). Mirrors
  * `terminal-text-scales.ts`: discrete presets keep the toolbar picker simple,
  * and pinch-to-zoom snaps to these same values so the toolbar and pinch
  * always agree on one persisted number.
