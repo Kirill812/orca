@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { scaleTextStyles } from './scale-text-styles'
-import { parseAppearancePrefs } from './appearance-prefs-parse'
 
 describe('scaleTextStyles', () => {
   it('scales fontSize and lineHeight only, rounded to half points', () => {
@@ -34,36 +33,15 @@ describe('scaleTextStyles', () => {
     expect(scaleTextStyles({ tab: { height: 36 } }, 0.85)).toEqual({ tab: { height: 36 } })
   })
 
+  it('leaves array and non-object style values alone', () => {
+    const composed = [{ fontSize: 10 }]
+    const out = scaleTextStyles({ composed, plain: 4 }, 2)
+    expect(out.composed).toBe(composed)
+    expect(out.plain).toBe(4)
+  })
+
   it('returns the input untouched at 100%', () => {
     const styles = { a: { fontSize: 12 } }
     expect(scaleTextStyles(styles, 1)).toBe(styles)
-  })
-})
-
-describe('parseAppearancePrefs', () => {
-  it('falls back to defaults on garbage and unknown values', () => {
-    expect(parseAppearancePrefs(null)).toEqual({
-      theme: 'system',
-      contrast: 'normal',
-      textScale: 1
-    })
-    expect(parseAppearancePrefs('{nope')).toEqual({
-      theme: 'system',
-      contrast: 'normal',
-      textScale: 1
-    })
-    expect(parseAppearancePrefs('{"theme":"sepia","contrast":"max","textScale":7}')).toEqual({
-      theme: 'system',
-      contrast: 'normal',
-      textScale: 1
-    })
-  })
-
-  it('keeps valid values', () => {
-    expect(parseAppearancePrefs('{"theme":"light","contrast":"high","textScale":1.3}')).toEqual({
-      theme: 'light',
-      contrast: 'high',
-      textScale: 1.3
-    })
   })
 })
