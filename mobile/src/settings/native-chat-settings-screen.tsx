@@ -9,29 +9,26 @@ import { useMobileDefaultSessionViewPreference } from '../session/use-mobile-def
 import { useFloatingVoiceButtonSettingsScreenState } from '../session/use-floating-voice-button-settings'
 import {
   FLOATING_VOICE_BUTTON_OPACITY_OPTIONS,
-  FLOATING_VOICE_BUTTON_SIZE_OPTIONS,
-  type FloatingVoiceButtonOpacityPercent,
-  type FloatingVoiceButtonSizePercent
+  FLOATING_VOICE_BUTTON_SIZE_OPTIONS
 } from '../session/floating-voice-button-geometry'
 import { PickerModal, type PickerOption } from '../components/PickerModal'
 import type { VoiceSettingsOperations } from './voice-settings-operations'
 
 // PickerModal is string-keyed; picker values are the percent as a string,
 // mapped back to the numeric percent on select.
-type VoiceButtonSizeOptionValue = `${FloatingVoiceButtonSizePercent}`
-type VoiceButtonOpacityOptionValue = `${FloatingVoiceButtonOpacityPercent}`
-
-const VOICE_BUTTON_SIZE_OPTIONS: PickerOption<VoiceButtonSizeOptionValue>[] =
-  FLOATING_VOICE_BUTTON_SIZE_OPTIONS.map((percent) => ({
-    value: `${percent}` as VoiceButtonSizeOptionValue,
+const VOICE_BUTTON_SIZE_OPTIONS: PickerOption[] = FLOATING_VOICE_BUTTON_SIZE_OPTIONS.map(
+  (percent) => ({
+    value: `${percent}`,
     label: percent === 200 ? `${percent}% (default)` : `${percent}%`
-  }))
+  })
+)
 
-const VOICE_BUTTON_OPACITY_OPTIONS: PickerOption<VoiceButtonOpacityOptionValue>[] =
-  FLOATING_VOICE_BUTTON_OPACITY_OPTIONS.map((percent) => ({
-    value: `${percent}` as VoiceButtonOpacityOptionValue,
+const VOICE_BUTTON_OPACITY_OPTIONS: PickerOption[] = FLOATING_VOICE_BUTTON_OPACITY_OPTIONS.map(
+  (percent) => ({
+    value: `${percent}`,
     label: percent === 100 ? `${percent}% (default)` : `${percent}%`
-  }))
+  })
+)
 
 // Same dictationMode ('toggle' | 'hold') the Voice settings screen edits — this
 // is deliberately NOT a separate preference; both screens read/write it
@@ -73,7 +70,7 @@ export default function NativeChatSettingsScreen({
   const [dictationMode, setDictationMode] = useState<DictationModeValue>('toggle')
   const [voiceError, setVoiceError] = useState<string | null>(null)
 
-  const applySetupMode = (mode: string) => {
+  const applySetupMode = (mode: string | undefined) => {
     if (mode === 'toggle' || mode === 'hold') {
       setDictationMode(mode)
     }
@@ -244,25 +241,33 @@ export default function NativeChatSettingsScreen({
         {voiceError ? <Text style={styles.errorText}>{voiceError}</Text> : null}
       </ScrollView>
 
-      <PickerModal<VoiceButtonSizeOptionValue>
+      <PickerModal
         visible={showSizePicker}
         title="Button size"
         options={VOICE_BUTTON_SIZE_OPTIONS}
-        selected={`${floatingVoiceSizePercent}` as VoiceButtonSizeOptionValue}
-        onSelect={(value) =>
-          setFloatingVoiceSizePercent(Number(value) as FloatingVoiceButtonSizePercent)
-        }
+        selected={`${floatingVoiceSizePercent}`}
+        onSelect={(value) => {
+          const percent = FLOATING_VOICE_BUTTON_SIZE_OPTIONS.find((option) => `${option}` === value)
+          if (percent !== undefined) {
+            setFloatingVoiceSizePercent(percent)
+          }
+        }}
         onClose={() => setShowSizePicker(false)}
       />
 
-      <PickerModal<VoiceButtonOpacityOptionValue>
+      <PickerModal
         visible={showOpacityPicker}
         title="Button opacity"
         options={VOICE_BUTTON_OPACITY_OPTIONS}
-        selected={`${floatingVoiceOpacityPercent}` as VoiceButtonOpacityOptionValue}
-        onSelect={(value) =>
-          setFloatingVoiceOpacityPercent(Number(value) as FloatingVoiceButtonOpacityPercent)
-        }
+        selected={`${floatingVoiceOpacityPercent}`}
+        onSelect={(value) => {
+          const percent = FLOATING_VOICE_BUTTON_OPACITY_OPTIONS.find(
+            (option) => `${option}` === value
+          )
+          if (percent !== undefined) {
+            setFloatingVoiceOpacityPercent(percent)
+          }
+        }}
         onClose={() => setShowOpacityPicker(false)}
       />
 

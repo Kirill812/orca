@@ -17,7 +17,7 @@ export function isFloatingVoiceButtonSizePercent(
 ): value is FloatingVoiceButtonSizePercent {
   return (
     typeof value === 'number' &&
-    (FLOATING_VOICE_BUTTON_SIZE_OPTIONS as readonly number[]).includes(value)
+    FLOATING_VOICE_BUTTON_SIZE_OPTIONS.some((option) => option === value)
   )
 }
 
@@ -38,7 +38,7 @@ export function isFloatingVoiceButtonOpacityPercent(
 ): value is FloatingVoiceButtonOpacityPercent {
   return (
     typeof value === 'number' &&
-    (FLOATING_VOICE_BUTTON_OPACITY_OPTIONS as readonly number[]).includes(value)
+    FLOATING_VOICE_BUTTON_OPACITY_OPTIONS.some((option) => option === value)
   )
 }
 
@@ -186,7 +186,10 @@ export function isFloatingVoiceButtonNormalizedPosition(
   if (typeof value !== 'object' || value === null) {
     return false
   }
-  const { xFrac, yFrac } = value as Record<string, unknown>
+  if (!('xFrac' in value) || !('yFrac' in value)) {
+    return false
+  }
+  const { xFrac, yFrac } = value
   return (
     typeof xFrac === 'number' &&
     typeof yFrac === 'number' &&

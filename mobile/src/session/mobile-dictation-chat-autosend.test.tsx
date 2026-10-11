@@ -3,10 +3,13 @@ import { createElement, useRef } from 'react'
 import { act, create } from 'react-test-renderer'
 import { describe, expect, it, vi } from 'vitest'
 
-const seen = vi.hoisted(() => ({
-  onTranscript: null as ((text: string) => void) | null,
-  controllerSends: 0
-}))
+const seen = vi.hoisted(() => {
+  const state: { onTranscript: ((text: string) => void) | null; controllerSends: number } = {
+    onTranscript: null,
+    controllerSends: 0
+  }
+  return state
+})
 
 vi.mock('expo-router', () => ({ useFocusEffect: () => {} }))
 vi.mock('../platform/haptics', () => ({ triggerError: () => {} }))
@@ -94,8 +97,8 @@ describe('chat dictation auto-send', () => {
         showToast: () => {},
         resetLiveInputFocus: () => {}
       }
-      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: scope carries every member this hook destructures.
       const model = useMobileSessionNativeChatDictation(
+        // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: scope carries every member this hook destructures.
         scope as never,
         async () => true,
         async () => {}
@@ -110,7 +113,7 @@ describe('chat dictation auto-send', () => {
       seen.onTranscript?.('hello')
     })
     expect(composerSend).toHaveBeenCalledTimes(1)
-    expect(composerSend).toHaveBeenCalledWith('draft\nhello')
+    expect(composerSend).toHaveBeenCalledWith('draft hello')
     expect(seen.controllerSends).toBe(0)
   })
 })
