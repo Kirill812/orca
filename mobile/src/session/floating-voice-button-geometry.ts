@@ -50,6 +50,9 @@ export function isFloatingVoiceButtonDragTap(dx: number, dy: number): boolean {
 }
 
 /** What a Pan gesture's release should do, decoupled from RNGH's onEnd/onFinalize split.
+ *  RNGH's finalize `success` is NOT used: a stationary tap never activates the Pan, so it
+ *  finalizes as FAILED (success=false) yet is a normal release decided by distance. A real
+ *  system cancel is detected separately (onTouchesCancelled) and passed as `cancelled`.
  *  Hold mode: a drag or cancelled touch CANCELS the dictation (nothing transcribed or sent);
  *  otherwise pressOut. It keys on `pressedIn`, not `disabled`, so a recording can always stop. */
 export type FloatingVoiceReleaseAction = 'tap' | 'cancel' | 'drag' | 'pressOut' | 'none'
@@ -64,20 +67,20 @@ export function resolveFloatingVoiceRelease(params: {
   processing: boolean
   /** Hold mode: whether onBegin already called pressIn for this touch. */
   pressedIn: boolean
-  /** RNGH finalize `success`; false = the system cancelled the gesture. */
-  success: boolean
+  /** The system took the touch (onTouchesCancelled). Not RNGH's finalize `success`. */
+  cancelled: boolean
 }): FloatingVoiceReleaseAction {
   const dragged = !isFloatingVoiceButtonDragTap(params.dx, params.dy)
   if (params.mode === 'hold') {
     if (!params.pressedIn) {
       return dragged ? 'drag' : 'none'
     }
-    return dragged || !params.success ? 'cancel' : 'pressOut'
+    return dragged || params.cancelled ? 'cancel' : 'pressOut'
   }
   if (dragged) {
     return 'drag'
   }
-  if (params.disabled || !params.success) {
+  if (params.disabled || params.cancelled) {
     return 'none'
   }
   return params.heldLongEnough && (params.active || params.processing) ? 'cancel' : 'tap'

@@ -97,6 +97,7 @@ function FloatingVoiceButtonDraggable({
   const heldLongEnough = useRef(false)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pressedIn = useRef(false)
+  const touchCancelled = useRef(false)
 
   // Load the saved position once, then re-clamp it to the current container
   // any time the container or the button's own size changes (rotation,
@@ -134,6 +135,7 @@ function FloatingVoiceButtonDraggable({
     // runOnJS: the callbacks touch React state and AsyncStorage, which crash from a UI-thread worklet.
     .runOnJS(true)
     .onBegin(() => {
+      touchCancelled.current = false
       dragStart.current = posRef.current
       heldLongEnough.current = false
       if (longPressTimer.current) {
@@ -146,6 +148,9 @@ function FloatingVoiceButtonDraggable({
       if (pressedIn.current) {
         onPressIn?.()
       }
+    })
+    .onTouchesCancelled(() => {
+      touchCancelled.current = true
     })
     .onUpdate((e) => {
       if (!dragStart.current) {
@@ -163,7 +168,8 @@ function FloatingVoiceButtonDraggable({
       )
     })
     // onFinalize, not onEnd: onEnd only runs once the Pan activates, so a stationary tap/hold never fired.
-    .onFinalize((e, success) => {
+    // Its `success` is false for exactly those never-activated taps, so it must not signal cancellation.
+    .onFinalize((e) => {
       if (longPressTimer.current) {
         clearTimeout(longPressTimer.current)
         longPressTimer.current = null
@@ -193,7 +199,7 @@ function FloatingVoiceButtonDraggable({
         active,
         processing,
         pressedIn: pressedIn.current,
-        success
+        cancelled: touchCancelled.current
       })
       pressedIn.current = false
       if (action === 'tap') {

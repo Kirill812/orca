@@ -24,7 +24,7 @@ const BASE_RELEASE_PARAMS = {
   active: false,
   processing: false,
   pressedIn: false,
-  success: true
+  cancelled: false
 }
 
 describe('resolveFloatingVoiceRelease', () => {
@@ -61,19 +61,29 @@ describe('resolveFloatingVoiceRelease', () => {
     ).toBe('none')
   })
 
-  it('hold mode cancelled gesture cancels the dictation', () => {
+  it('toggle tap that never activated the Pan (success:false) still resolves to tap', () => {
+    expect(resolveFloatingVoiceRelease({ ...BASE_RELEASE_PARAMS })).toBe('tap')
+  })
+
+  it('hold stationary release that never activated the Pan (success:false) resolves to pressOut', () => {
+    expect(
+      resolveFloatingVoiceRelease({ ...BASE_RELEASE_PARAMS, mode: 'hold', pressedIn: true })
+    ).toBe('pressOut')
+  })
+
+  it('touches cancelled cancels a hold dictation', () => {
     expect(
       resolveFloatingVoiceRelease({
         ...BASE_RELEASE_PARAMS,
         mode: 'hold',
         pressedIn: true,
-        success: false
+        cancelled: true
       })
     ).toBe('cancel')
   })
 
-  it('a cancelled toggle gesture with little movement does not toggle', () => {
-    expect(resolveFloatingVoiceRelease({ ...BASE_RELEASE_PARAMS, success: false })).toBe('none')
+  it('touches cancelled in toggle mode does not toggle', () => {
+    expect(resolveFloatingVoiceRelease({ ...BASE_RELEASE_PARAMS, cancelled: true })).toBe('none')
   })
 
   it('movement past the drag threshold resolves to drag', () => {
