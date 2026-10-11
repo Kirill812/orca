@@ -41,11 +41,19 @@ export default function DisplaySettingsScreen({ onBack }: { onBack?: () => void 
   const insets = useSafeAreaInsets()
   const [prefs, setPrefs] = useState<AppearancePrefs>(readAppearancePrefs)
   const [openPicker, setOpenPicker] = useState<OpenPicker>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const update = useCallback(
     (patch: Partial<AppearancePrefs>) => {
       const next = { ...prefs, ...patch }
-      writeAppearancePrefs(next)
+      try {
+        writeAppearancePrefs(next)
+      } catch (err) {
+        // Keep the previous value shown: the write did not land, so the choice would not apply.
+        setSaveError(err instanceof Error ? err.message : 'Could not save display settings')
+        return
+      }
+      setSaveError(null)
       setPrefs(next)
     },
     [prefs]
@@ -126,6 +134,11 @@ export default function DisplaySettingsScreen({ onBack }: { onBack?: () => void 
             <ChevronRight size={16} color={colors.textMuted} />
           </Pressable>
         </View>
+        {saveError ? (
+          <Text style={[styles.groupDescription, styles.sectionTopGap, styles.errorText]}>
+            Could not save: {saveError}
+          </Text>
+        ) : null}
         {pendingRestart ? (
           <Text style={[styles.groupDescription, styles.sectionTopGap]}>
             Close and reopen Orca to apply.
@@ -185,6 +198,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: colors.textPrimary
+  },
+  errorText: {
+    color: colors.statusRed
   },
   groupDescription: {
     fontSize: typography.bodySize - 1,
