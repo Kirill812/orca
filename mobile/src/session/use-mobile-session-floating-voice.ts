@@ -1,18 +1,19 @@
-import { useFloatingVoiceButtonSessionSettings } from './use-floating-voice-button-settings'
 import type {
   FloatingVoiceButtonOpacityPercent,
   FloatingVoiceButtonSizePercent
 } from './floating-voice-button-geometry'
+import type { useFloatingVoiceButtonSessionSettings } from './use-floating-voice-button-settings'
 
-/** Settings → Chat UI's floating voice button prefs, merged into the session
- *  controller so both the terminal dock and the Chat UI overlay can read them
- *  without their own AsyncStorage reads. */
-export function useMobileSessionFloatingVoice(): {
+/** Maps the prefs read once by the dictation hook into the names the terminal dock
+ *  and Chat UI overlay consume. */
+export function useMobileSessionFloatingVoice(scope: {
+  floatingVoiceSettings: ReturnType<typeof useFloatingVoiceButtonSessionSettings>
+}): {
   floatingVoiceEnabled: boolean
   floatingVoiceSizePercent: FloatingVoiceButtonSizePercent
   floatingVoiceOpacityPercent: FloatingVoiceButtonOpacityPercent
 } {
-  const { enabled, sizePercent, opacityPercent } = useFloatingVoiceButtonSessionSettings()
+  const { enabled, sizePercent, opacityPercent } = scope.floatingVoiceSettings
   return {
     floatingVoiceEnabled: enabled,
     floatingVoiceSizePercent: sizePercent,

@@ -127,7 +127,10 @@ export function useMobileSessionController() {
     presentation,
     useMobileSessionPanelRouteActions(presentation)
   )
-  const floatingVoice = Object.assign(panelRouteActions, useMobileSessionFloatingVoice())
+  const floatingVoice = Object.assign(
+    panelRouteActions,
+    useMobileSessionFloatingVoice(panelRouteActions)
+  )
   return floatingVoice
 }
 

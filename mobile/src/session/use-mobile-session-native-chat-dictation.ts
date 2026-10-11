@@ -53,11 +53,11 @@ export function useMobileSessionNativeChatDictation(
     showToast,
     resetLiveInputFocus
   } = scope
-  // Chat UI's own Settings screen writes this via useFloatingVoiceButtonSettingsScreenState;
-  // re-read on focus like the rest of the floating-voice prefs (useMobileSessionFloatingVoice
-  // reads the same AsyncStorage key independently — this hook runs earlier in the
-  // controller's hook chain and can't take that hook's output as a plain argument).
-  const { autoSend: floatingVoiceAutoSend } = useFloatingVoiceButtonSessionSettings()
+  // Sole reader of the floating-voice prefs; useMobileSessionFloatingVoice maps this result.
+  const floatingVoiceSettings = useFloatingVoiceButtonSessionSettings()
+  const floatingVoiceAutoSend = floatingVoiceSettings.autoSend
+  // Bridge to the composer's send (images + terminal write lock); set by use-mobile-session-attachments.
+  const sendNativeChatRef = useRef<((text: string) => Promise<boolean>) | null>(null)
   // Latest rendered drafts, for building the auto-sent text synchronously in onTranscript.
   const bufferedInputRef = useRef(input)
   bufferedInputRef.current = input
@@ -154,7 +154,7 @@ export function useMobileSessionNativeChatDictation(
         chatComposerTextRef.current = composed
         nativeChatController.setChatComposerText(composed)
         if (autoSend) {
-          void nativeChatController.handleNativeChatSend(composed)
+          void (sendNativeChatRef.current ?? nativeChatController.handleNativeChatSend)(composed)
         } else {
           showToast('Dictation inserted')
         }
@@ -297,6 +297,8 @@ export function useMobileSessionNativeChatDictation(
     showNativeChatRef,
     chatInputSendable: nativeChatController.chatInputSendable,
     dictation,
+    floatingVoiceSettings,
+    sendNativeChatRef,
     startDictation,
     cancelDictation,
     handleDictationToggle,
