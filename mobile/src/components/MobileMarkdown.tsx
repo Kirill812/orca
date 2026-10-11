@@ -12,8 +12,10 @@ import {
   type ComponentType,
   type ReactNode
 } from 'react'
-import { Pressable, ScrollView, Text as NativeText, View, type TextProps } from 'react-native'
+import { Pressable, Text as NativeText, View, type TextProps } from 'react-native'
 import { styles } from './mobile-markdown-styles'
+import { MobileMarkdownTable } from './MobileMarkdownTable'
+import { getMarkdownBlockScales, scaledTextStyle, withScale } from './mobile-markdown-scale'
 import {
   detectFilePathSegments,
   isFilePathCodeSpan,
@@ -49,8 +51,6 @@ type Props = {
   renderVisual?: (directive: NativeChatVisualDirective, index: number) => ReactNode
 }
 
-const MAX_TABLE_ROWS = 40
-const MAX_TABLE_COLUMNS = 8
 /** Prose base size — passed to MermaidDiagram fallback mono text. */
 const MERMAID_BASE = 13
 type MarkdownTextSetup = {
@@ -75,29 +75,6 @@ function MarkdownText(props: TextProps): React.JSX.Element {
     ...(props.selectable === true ? { selectable: false } : {}),
     ...(onLongPress && props.onPress ? { onLongPress } : {})
   })
-}
-
-// Why one root knob: every block type multiplies its own base font/line-height
-// by the same `textScale` rather than each having a bespoke scaled variant —
-// one number scales headings, prose, code, quotes and table cells together.
-function scaledTextStyle(
-  fontSize: number,
-  lineHeight: number | undefined,
-  textScale: number
-): { fontSize: number; lineHeight?: number } | null {
-  if (textScale === 1) {
-    return null
-  }
-  return lineHeight == null
-    ? { fontSize: fontSize * textScale }
-    : { fontSize: fontSize * textScale, lineHeight: lineHeight * textScale }
-}
-
-// Why: at the default scale, keep `style` the same plain object callers already got
-// (some tests read style props without RN's StyleSheet.flatten) instead of always
-// wrapping it in a single-purpose array.
-function withScale<T>(base: T, scale: object | null): T | [T, object] {
-  return scale ? [base, scale] : base
 }
 
 // Web/mail hrefs open the system handler; file-target hrefs (file: URIs and
@@ -272,20 +249,7 @@ function MobileMarkdownContent({
   const rowLongPress = setup.androidTranscript ? setup.onLongPress : undefined
   const text = content?.trim() ?? ''
   const { blocks, directives } = useMobileMarkdownBlocks(text, renderVisual !== undefined)
-  // Scale every block type off the same base sizes in mobile-markdown-styles.ts;
-  // inline spans (bold/italic/links) inherit fontSize from their wrapping Text,
-  // so only styles that set their own fontSize need an explicit scaled variant.
-  const proseScale = scaledTextStyle(13, 19, textScale)
-  const headingScale = scaledTextStyle(14, 20, textScale)
-  const headingLargeScale = scaledTextStyle(15, 21, textScale)
-  const quoteScale = scaledTextStyle(13, 19, textScale)
-  const codeLanguageScale = scaledTextStyle(10, undefined, textScale)
-  const codeTextScale = scaledTextStyle(12, 17, textScale)
-  const imageCaptionScale = scaledTextStyle(11, undefined, textScale)
-  const tableCellScale = scaledTextStyle(12, 17, textScale)
-  const tableTruncatedScale = scaledTextStyle(12, undefined, textScale)
-  const listMarkerScale = scaledTextStyle(13, 19, textScale)
-  const listScale = scaledTextStyle(13, 19, textScale)
+  const scales = getMarkdownBlockScales(textScale)
   if (!text) {
     return fallback ? (
       <MarkdownText selectable={rangeSelectable} style={styles.paragraph}>
@@ -314,9 +278,9 @@ function MobileMarkdownContent({
               selectable
               style={[
                 styles.heading,
-                headingScale,
+                scales.heading,
                 block.level <= 2 ? styles.headingLarge : null,
-                block.level <= 2 ? headingLargeScale : null
+                block.level <= 2 ? scales.headingLarge : null
               ]}
             >
               {renderInline(block.text, onOpenFile, textScale)}
@@ -326,7 +290,7 @@ function MobileMarkdownContent({
         if (block.type === 'quote') {
           return (
             <View key={index} style={styles.quote}>
-              <MarkdownText selectable style={withScale(styles.quoteText, quoteScale)}>
+              <MarkdownText selectable style={withScale(styles.quoteText, scales.quote)}>
                 {renderInline(block.text, onOpenFile, textScale)}
               </MarkdownText>
             </View>
@@ -350,11 +314,11 @@ function MobileMarkdownContent({
           return (
             <View key={index} style={styles.codeBlock}>
               {block.language ? (
-                <NativeText style={withScale(styles.codeLanguage, codeLanguageScale)}>
+                <NativeText style={withScale(styles.codeLanguage, scales.codeLanguage)}>
                   {block.language}
                 </NativeText>
               ) : null}
-              <MarkdownText selectable style={withScale(styles.codeText, codeTextScale)}>
+              <MarkdownText selectable style={withScale(styles.codeText, scales.codeText)}>
                 {block.text}
               </MarkdownText>
             </View>
@@ -370,7 +334,7 @@ function MobileMarkdownContent({
             >
               <NativeText style={styles.link}>{block.alt || 'Open image'}</NativeText>
               <NativeText
-                style={withScale(styles.imageCaption, imageCaptionScale)}
+                style={withScale(styles.imageCaption, scales.imageCaption)}
                 numberOfLines={1}
               >
                 {block.url}
@@ -379,46 +343,19 @@ function MobileMarkdownContent({
           )
         }
         if (block.type === 'table') {
-          const visibleHeaders = block.headers.slice(0, MAX_TABLE_COLUMNS)
-          const visibleRows = block.rows.slice(0, MAX_TABLE_ROWS)
-          const hiddenRows = Math.max(0, block.rows.length - visibleRows.length)
-          const hiddenColumns = Math.max(0, block.headers.length - visibleHeaders.length)
           return (
-            <ScrollView key={index} horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.table}>
-                <View style={styles.tableRow}>
-                  {visibleHeaders.map((header, cellIndex) => (
-                    <MarkdownText
-                      key={cellIndex}
-                      selectable
-                      style={[styles.tableCell, tableCellScale, styles.tableHeader]}
-                    >
-                      {renderInline(header, onOpenFile, textScale)}
-                    </MarkdownText>
-                  ))}
-                </View>
-                {visibleRows.map((row, rowIndex) => (
-                  <View key={rowIndex} style={styles.tableRow}>
-                    {visibleHeaders.map((_, cellIndex) => (
-                      <MarkdownText
-                        key={cellIndex}
-                        selectable
-                        style={withScale(styles.tableCell, tableCellScale)}
-                      >
-                        {renderInline(row[cellIndex] ?? '', onOpenFile, textScale)}
-                      </MarkdownText>
-                    ))}
-                  </View>
-                ))}
-                {hiddenRows > 0 || hiddenColumns > 0 ? (
-                  <NativeText style={withScale(styles.tableTruncated, tableTruncatedScale)}>
-                    {hiddenRows > 0 ? `${hiddenRows} more rows` : ''}
-                    {hiddenRows > 0 && hiddenColumns > 0 ? ' · ' : ''}
-                    {hiddenColumns > 0 ? `${hiddenColumns} more columns` : ''}
-                  </NativeText>
-                ) : null}
-              </View>
-            </ScrollView>
+            <MobileMarkdownTable
+              key={index}
+              headers={block.headers}
+              rows={block.rows}
+              cellScale={scales.tableCell}
+              truncatedScale={scales.tableTruncated}
+              renderCell={(cellText, style, key) => (
+                <MarkdownText key={key} selectable style={style}>
+                  {renderInline(cellText, onOpenFile, textScale)}
+                </MarkdownText>
+              )}
+            />
           )
         }
         if (block.type === 'list') {
@@ -426,7 +363,7 @@ function MobileMarkdownContent({
             <View key={index} style={styles.list}>
               {block.items.map((item, itemIndex) => (
                 <View key={itemIndex} style={styles.listItem}>
-                  <NativeText style={withScale(styles.listMarker, listMarkerScale)}>
+                  <NativeText style={withScale(styles.listMarker, scales.listMarker)}>
                     {item.checked == null
                       ? block.ordered
                         ? `${itemIndex + 1}.`
@@ -435,7 +372,7 @@ function MobileMarkdownContent({
                         ? '[x]'
                         : '[ ]'}
                   </NativeText>
-                  <MarkdownText selectable style={[styles.listText, listScale]}>
+                  <MarkdownText selectable style={[styles.listText, scales.list]}>
                     {renderInline(item.text, onOpenFile, textScale)}
                   </MarkdownText>
                 </View>
@@ -450,7 +387,7 @@ function MobileMarkdownContent({
           <MarkdownText
             key={index}
             selectable={rangeSelectable}
-            style={[styles.paragraph, proseScale]}
+            style={[styles.paragraph, scales.prose]}
           >
             {block.text.split('\n').map((line, lineIndex) => (
               <Fragment key={lineIndex}>
