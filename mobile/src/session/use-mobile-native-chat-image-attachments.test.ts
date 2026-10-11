@@ -449,6 +449,48 @@ describe('useMobileNativeChatImageAttachments', () => {
     expect(hook!.attachments).toHaveLength(1)
   })
 
+  it('rejects an overlapping send without a terminal lock (agent-session tab)', async () => {
+    const client = makeClient([])
+    let release: ((outcome: 'accepted') => void) | null = null
+    const baseSend = vi.fn().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          release = resolve
+        })
+    )
+    mount(
+      baseArgs({
+        client: client as unknown as RpcClient,
+        baseSend,
+        activeHandleRef: { current: null }
+      })
+    )
+    let first: Promise<boolean> | null = null
+    await act(async () => {
+      first = hook!.sendNativeChat('auto')
+      for (let i = 0; i < 50 && !release; i++) {
+        await Promise.resolve()
+      }
+    })
+    let second = true
+    await act(async () => {
+      second = await hook!.sendNativeChat('tap')
+    })
+    expect(second).toBe(false)
+    expect(baseSend).toHaveBeenCalledTimes(1)
+    await act(async () => {
+      release!('accepted')
+      await first
+    })
+    baseSend.mockResolvedValue('accepted')
+    let third = false
+    await act(async () => {
+      third = await hook!.sendNativeChat('next')
+    })
+    expect(third).toBe(true)
+    expect(baseSend).toHaveBeenCalledTimes(2)
+  })
+
   it('clears only the chips that were sent, keeping one attached mid-send', async () => {
     pick.mockResolvedValue([{ base64: 'AAAA', uri: 'file:///a.jpg' }])
     const client = makeClient([
