@@ -148,8 +148,7 @@ export function useMobileSessionNativeChatDictation(
       const autoSend = shouldAutoSendDictation(floatingVoiceAutoSend, text)
       // Why: dictation belongs to the visible composer — native chat consumes it locally, terminal mode keeps live-input routing.
       if (showNativeChatRef.current) {
-        // Why a ref, not a value captured inside the setState updater: React may run updaters
-        // lazily at the next render, which would auto-send the transcript without the draft.
+        // Why a ref, not a setState updater: updaters run lazily and would auto-send without the draft.
         const composed = appendBufferedDictation(chatComposerTextRef.current, text)
         chatComposerTextRef.current = composed
         nativeChatController.setChatComposerText(composed)
@@ -182,10 +181,7 @@ export function useMobileSessionNativeChatDictation(
             return
           }
           if (autoSend) {
-            // Text is already typed into the live PTY input — Send there just
-            // means "submit the line", which live terminal input does with a
-            // raw Enter byte (see use-terminal-live-input-commit.ts's own
-            // handleLiveInputSubmit), so reuse that exact mechanism.
+            // Text is already in the live PTY input; submit it with a raw Enter like handleLiveInputSubmit.
             void sendLiveTerminalInput(insertHandle, '\r')
           } else {
             showToast('Dictation inserted')
@@ -197,9 +193,7 @@ export function useMobileSessionNativeChatDictation(
       bufferedInputRef.current = composedBufferedDraft
       setInput(composedBufferedDraft)
       if (autoSend) {
-        // handleSend (bridged via sendBufferedTerminalInput) clears the draft
-        // itself and sends with Enter — the setInput above still runs so a
-        // rejected send has the right text to restore into the field.
+        // handleSend clears the draft; setInput above lets a rejected send restore the text.
         void sendBufferedTerminalInput(composedBufferedDraft)
       } else {
         showToast('Dictation inserted')

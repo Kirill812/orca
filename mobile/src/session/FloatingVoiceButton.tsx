@@ -93,9 +93,7 @@ function FloatingVoiceButtonDraggable({
   const posRef = useRef(pos)
   posRef.current = pos
   const dragStart = useRef<FloatingVoiceButtonPoint | null>(null)
-  // Why not Date.now(): react/purity flags wall-clock reads reachable from the
-  // gesture chain (it can't see they run outside render); a timer-driven flag
-  // gets the same "held long enough" answer without an impure call in scope.
+  // Timer flag, not Date.now(): react/purity flags wall-clock reads in the gesture chain.
   const heldLongEnough = useRef(false)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pressedIn = useRef(false)
@@ -133,9 +131,7 @@ function FloatingVoiceButtonDraggable({
   ])
 
   const pan = Gesture.Pan()
-    // Why runOnJS: the callbacks call React state setters and AsyncStorage —
-    // touching those from a UI-thread worklet crashes (see the pinch-gesture
-    // hook's comment for the same reasoning).
+    // runOnJS: the callbacks touch React state and AsyncStorage, which crash from a UI-thread worklet.
     .runOnJS(true)
     .onBegin(() => {
       dragStart.current = posRef.current
@@ -166,11 +162,7 @@ function FloatingVoiceButtonDraggable({
         })
       )
     })
-    // Why onFinalize, not onEnd: RNGH only calls onEnd when the Pan ACTIVATED
-    // (~10px of movement) — a stationary tap or hold-press never activates, so
-    // onEnd (and therefore onTap/onPressOut) silently never ran. onFinalize runs
-    // for every touch end, activated or not, and also on a cancelled gesture —
-    // which a hold-mode release must see too, or dictation is left stuck recording.
+    // onFinalize, not onEnd: onEnd only runs once the Pan activates, so a stationary tap/hold never fired.
     .onFinalize((e, success) => {
       if (longPressTimer.current) {
         clearTimeout(longPressTimer.current)
@@ -218,23 +210,25 @@ function FloatingVoiceButtonDraggable({
     return null
   }
 
-  // Why not folded into a style array entry: the e-ink high-contrast
-  // post-processor only rewrites backgroundColor/borderColor/borderWidth
-  // inside StyleSheet.create — opacity (user setting + disabled dimming)
-  // must stay inline so that pass leaves it alone.
+  // Opacity stays inline: the e-ink high-contrast pass only rewrites colors inside StyleSheet.create.
   const opacity = (disabled ? 0.45 : 1) * (opacityPercent / 100)
 
   return (
-    // Why the root view is only as big as the button: there is no app-wide GestureHandlerRootView,
-    // so this one is a real gesture root, and on Android a root claims every touch inside its
-    // bounds despite pointerEvents="box-none". Full-screen, it swallowed taps meant for the Chat UI
-    // prompt field underneath (no caret, no keyboard).
+    // Root sized to the button: on Android a full-screen gesture root swallows taps meant for the prompt field.
     <GestureHandlerRootView
       style={[styles.root, { left: pos.x, top: pos.y, width: diameter, height: diameter }]}
     >
       <GestureDetector gesture={pan}>
         <View
+          accessible
           accessibilityRole="button"
+          accessibilityState={{ disabled, busy: processing }}
+          accessibilityActions={[{ name: 'activate' }]}
+          onAccessibilityAction={() => {
+            if (!disabled) {
+              onTap()
+            }
+          }}
           accessibilityLabel={
             processing
               ? 'Cancel voice dictation'
@@ -253,8 +247,7 @@ function FloatingVoiceButtonDraggable({
             active && styles.buttonActive
           ]}
         >
-          {/* Why a stop square while recording: a mic that looks the same before and during
-              recording left the user unable to tell whether dictation was running. */}
+          {/* Stop square while recording so the user can tell dictation is running. */}
           {processing ? (
             <ActivityIndicator size="small" color={colors.textPrimary} />
           ) : active ? (
