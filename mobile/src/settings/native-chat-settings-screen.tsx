@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: typography.bodySize - 2,
-    color: colors.destructive,
+    color: colors.statusRed,
     marginTop: spacing.sm,
     paddingHorizontal: spacing.xs
   },
