@@ -1,4 +1,5 @@
 import { useMemo, useRef } from 'react'
+import { Platform } from 'react-native'
 import { Gesture } from 'react-native-gesture-handler'
 import { clampMarkdownTextScale, snapMarkdownTextScale } from './markdown-text-scales'
 
@@ -28,6 +29,9 @@ export function useMarkdownTextScalePinchGesture(
 
   return useMemo(() => {
     const pinch = Gesture.Pinch()
+      // Why off on web: RNGH there sets user-select:none / touch-action:none on the wrapped view,
+      // which would break text selection and touch scrolling in the web editor and preview.
+      .enabled(Platform.OS !== 'web')
       // Why: run on the JS thread, not a reanimated UI-thread worklet — touching
       // React state/refs from there crashes the app (see the chat pinch gesture).
       .runOnJS(true)
