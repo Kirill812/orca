@@ -42,19 +42,16 @@ export function isFloatingVoiceButtonOpacityPercent(
   )
 }
 
-// Movement under this many px is a tap/hold-press, not a drag. Gesture.Pan's
-// own minDistance already filters sub-pixel jitter; this is the threshold that
-// decides intent once the pan has activated.
+// Movement of at least this many px is a drag; below it, a tap/hold-press (also applied on non-activated releases).
 export const FLOATING_VOICE_BUTTON_DRAG_THRESHOLD_PX = 12
 
 export function isFloatingVoiceButtonDragTap(dx: number, dy: number): boolean {
   return Math.hypot(dx, dy) < FLOATING_VOICE_BUTTON_DRAG_THRESHOLD_PX
 }
 
-/** What a Pan gesture's release should do, decoupled from RNGH's onEnd/onFinalize
- *  split so it's testable without mocking gesture-handler. 'hold' mode always
- *  resolves to pressOut/none regardless of tap-vs-drag distance, matching a
- *  walkie-talkie release firing even if the finger drifted a few px while held. */
+/** What a Pan gesture's release should do, decoupled from RNGH's onEnd/onFinalize split.
+ *  Hold mode: a drag or cancelled touch CANCELS the dictation (nothing transcribed or sent);
+ *  otherwise pressOut. It keys on `pressedIn`, not `disabled`, so a recording can always stop. */
 export type FloatingVoiceReleaseAction = 'tap' | 'cancel' | 'drag' | 'pressOut' | 'none'
 
 export function resolveFloatingVoiceRelease(params: {
@@ -65,14 +62,22 @@ export function resolveFloatingVoiceRelease(params: {
   heldLongEnough: boolean
   active: boolean
   processing: boolean
+  /** Hold mode: whether onBegin already called pressIn for this touch. */
+  pressedIn: boolean
+  /** RNGH finalize `success`; false = the system cancelled the gesture. */
+  success: boolean
 }): FloatingVoiceReleaseAction {
+  const dragged = !isFloatingVoiceButtonDragTap(params.dx, params.dy)
   if (params.mode === 'hold') {
-    return params.disabled ? 'none' : 'pressOut'
+    if (!params.pressedIn) {
+      return dragged ? 'drag' : 'none'
+    }
+    return dragged || !params.success ? 'cancel' : 'pressOut'
   }
-  if (!isFloatingVoiceButtonDragTap(params.dx, params.dy)) {
+  if (dragged) {
     return 'drag'
   }
-  if (params.disabled) {
+  if (params.disabled || !params.success) {
     return 'none'
   }
   return params.heldLongEnough && (params.active || params.processing) ? 'cancel' : 'tap'
@@ -96,11 +101,11 @@ export type FloatingVoiceButtonPoint = {
   readonly y: number
 }
 
+export const FLOATING_VOICE_BUTTON_EDGE_MARGIN = 8
+
 /** Clamps a top-left px position so the button (given `diameter`) stays fully
  *  inside the container and clear of the safe area on every edge. Falls back
  *  to the top-left safe corner when the container is too small to fit it. */
-export const FLOATING_VOICE_BUTTON_EDGE_MARGIN = 8
-
 export function clampFloatingVoiceButtonPosition(params: {
   x: number
   y: number

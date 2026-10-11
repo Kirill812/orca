@@ -22,7 +22,9 @@ const BASE_RELEASE_PARAMS = {
   disabled: false,
   heldLongEnough: false,
   active: false,
-  processing: false
+  processing: false,
+  pressedIn: false,
+  success: true
 }
 
 describe('resolveFloatingVoiceRelease', () => {
@@ -31,19 +33,47 @@ describe('resolveFloatingVoiceRelease', () => {
   })
 
   it('hold mode stationary release resolves to pressOut', () => {
-    expect(resolveFloatingVoiceRelease({ ...BASE_RELEASE_PARAMS, mode: 'hold' })).toBe('pressOut')
+    expect(
+      resolveFloatingVoiceRelease({ ...BASE_RELEASE_PARAMS, mode: 'hold', pressedIn: true })
+    ).toBe('pressOut')
   })
 
-  it('hold mode release still fires pressOut even if the finger drifted', () => {
-    expect(resolveFloatingVoiceRelease({ ...BASE_RELEASE_PARAMS, mode: 'hold', dx: 30 })).toBe(
-      'pressOut'
-    )
+  it('hold mode drag release cancels the dictation instead of stopping it', () => {
+    expect(
+      resolveFloatingVoiceRelease({ ...BASE_RELEASE_PARAMS, mode: 'hold', pressedIn: true, dx: 30 })
+    ).toBe('cancel')
   })
 
-  it('hold mode gives no action while disabled', () => {
+  it('hold mode pressOut fires whenever pressIn ran, even if disabled flipped mid-hold', () => {
+    expect(
+      resolveFloatingVoiceRelease({
+        ...BASE_RELEASE_PARAMS,
+        mode: 'hold',
+        pressedIn: true,
+        disabled: true
+      })
+    ).toBe('pressOut')
+  })
+
+  it('hold mode with no pressIn (disabled at touch-down) does nothing', () => {
     expect(
       resolveFloatingVoiceRelease({ ...BASE_RELEASE_PARAMS, mode: 'hold', disabled: true })
     ).toBe('none')
+  })
+
+  it('hold mode cancelled gesture cancels the dictation', () => {
+    expect(
+      resolveFloatingVoiceRelease({
+        ...BASE_RELEASE_PARAMS,
+        mode: 'hold',
+        pressedIn: true,
+        success: false
+      })
+    ).toBe('cancel')
+  })
+
+  it('a cancelled toggle gesture with little movement does not toggle', () => {
+    expect(resolveFloatingVoiceRelease({ ...BASE_RELEASE_PARAMS, success: false })).toBe('none')
   })
 
   it('movement past the drag threshold resolves to drag', () => {

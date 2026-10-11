@@ -66,9 +66,11 @@ export function MobileSessionContentRow({ controller }: { controller: MobileSess
           mode={dictationMode}
           active={dictation.isRecording || dictation.isStarting}
           processing={dictation.isProcessing}
-          // Chat UI has its own send gate (lease + connection); the terminal
-          // dock's canSend only applies while the terminal is the active view.
-          disabled={showNativeChat ? !chatInputSendable : !canSend}
+          // Never disabled while recording/processing, so it can always stop (like the inline mic).
+          disabled={
+            !(dictation.isRecording || dictation.isStarting || dictation.isProcessing) &&
+            (showNativeChat ? !chatInputSendable : !canSend)
+          }
           onTap={handleDictationToggle}
           onPressIn={handleDictationPressIn}
           onPressOut={handleDictationPressOut}

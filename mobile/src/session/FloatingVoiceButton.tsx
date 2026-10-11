@@ -98,6 +98,7 @@ function FloatingVoiceButtonDraggable({
   // gets the same "held long enough" answer without an impure call in scope.
   const heldLongEnough = useRef(false)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pressedIn = useRef(false)
 
   // Load the saved position once, then re-clamp it to the current container
   // any time the container or the button's own size changes (rotation,
@@ -145,7 +146,8 @@ function FloatingVoiceButtonDraggable({
       longPressTimer.current = setTimeout(() => {
         heldLongEnough.current = true
       }, LONG_PRESS_CANCEL_MS)
-      if (mode === 'hold' && !disabled) {
+      pressedIn.current = mode === 'hold' && !disabled
+      if (pressedIn.current) {
         onPressIn?.()
       }
     })
@@ -169,7 +171,7 @@ function FloatingVoiceButtonDraggable({
     // onEnd (and therefore onTap/onPressOut) silently never ran. onFinalize runs
     // for every touch end, activated or not, and also on a cancelled gesture —
     // which a hold-mode release must see too, or dictation is left stuck recording.
-    .onFinalize((e) => {
+    .onFinalize((e, success) => {
       if (longPressTimer.current) {
         clearTimeout(longPressTimer.current)
         longPressTimer.current = null
@@ -197,8 +199,11 @@ function FloatingVoiceButtonDraggable({
         disabled,
         heldLongEnough: heldLongEnough.current,
         active,
-        processing
+        processing,
+        pressedIn: pressedIn.current,
+        success
       })
+      pressedIn.current = false
       if (action === 'tap') {
         onTap()
       } else if (action === 'cancel') {
