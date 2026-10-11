@@ -41,6 +41,9 @@ type Props = {
   /** Multiplier for prose font size (paragraphs, lists, quotes). Defaults to 1;
    *  the chat view passes >1 so agent prose reads larger than the compact base. */
   textScale?: number
+  /** Also scale headings, quotes, code, tables, captions and inline code by `textScale`.
+   *  Off for chat (which scales only paragraphs and lists); the Markdown viewers opt in. */
+  scaleAllBlocks?: boolean
   /** When provided, detected file paths and file-target hrefs render as tappable
    *  and invoke this with the path text (worktree-relative or absolute, with an
    *  optional :line(:col) suffix). Omitted on screens with no file viewer, where
@@ -241,6 +244,7 @@ function MobileMarkdownContent({
   fallback = '',
   rangeSelectable = false,
   textScale = 1,
+  scaleAllBlocks = false,
   onOpenFile,
   renderVisual
 }: Props) {
@@ -249,7 +253,8 @@ function MobileMarkdownContent({
   const rowLongPress = setup.androidTranscript ? setup.onLongPress : undefined
   const text = content?.trim() ?? ''
   const { blocks, directives } = useMobileMarkdownBlocks(text, renderVisual !== undefined)
-  const scales = getMarkdownBlockScales(textScale)
+  const scales = getMarkdownBlockScales(textScale, scaleAllBlocks)
+  const inlineScale = scaleAllBlocks ? textScale : 1
   if (!text) {
     return fallback ? (
       <MarkdownText selectable={rangeSelectable} style={styles.paragraph}>
@@ -283,7 +288,7 @@ function MobileMarkdownContent({
                 block.level <= 2 ? scales.headingLarge : null
               ]}
             >
-              {renderInline(block.text, onOpenFile, textScale)}
+              {renderInline(block.text, onOpenFile, inlineScale)}
             </MarkdownText>
           )
         }
@@ -291,7 +296,7 @@ function MobileMarkdownContent({
           return (
             <View key={index} style={styles.quote}>
               <MarkdownText selectable style={withScale(styles.quoteText, scales.quote)}>
-                {renderInline(block.text, onOpenFile, textScale)}
+                {renderInline(block.text, onOpenFile, inlineScale)}
               </MarkdownText>
             </View>
           )
@@ -352,7 +357,7 @@ function MobileMarkdownContent({
               truncatedScale={scales.tableTruncated}
               renderCell={(cellText, style, key) => (
                 <MarkdownText key={key} selectable style={style}>
-                  {renderInline(cellText, onOpenFile, textScale)}
+                  {renderInline(cellText, onOpenFile, inlineScale)}
                 </MarkdownText>
               )}
             />
@@ -373,7 +378,7 @@ function MobileMarkdownContent({
                         : '[ ]'}
                   </NativeText>
                   <MarkdownText selectable style={[styles.listText, scales.list]}>
-                    {renderInline(item.text, onOpenFile, textScale)}
+                    {renderInline(item.text, onOpenFile, inlineScale)}
                   </MarkdownText>
                 </View>
               ))}
@@ -392,7 +397,7 @@ function MobileMarkdownContent({
             {block.text.split('\n').map((line, lineIndex) => (
               <Fragment key={lineIndex}>
                 {lineIndex > 0 ? '\n' : null}
-                {renderInline(line, onOpenFile, textScale)}
+                {renderInline(line, onOpenFile, inlineScale)}
               </Fragment>
             ))}
           </MarkdownText>

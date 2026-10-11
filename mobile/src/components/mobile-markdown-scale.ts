@@ -24,18 +24,21 @@ export function withScale<T>(base: T, scale: object | null): T | [T, object] {
 // Base sizes mirror mobile-markdown-styles.ts; inline spans (bold/italic/links)
 // inherit fontSize from their wrapping Text, so only styles that set their own
 // fontSize need an explicit scaled variant.
-export function getMarkdownBlockScales(textScale: number) {
+// Why two modes: chat scales only paragraphs and lists (its original behaviour, which
+// must not change); the Markdown viewers pass `scaleAllBlocks` to scale every block.
+export function getMarkdownBlockScales(textScale: number, scaleAllBlocks = false) {
+  const other = scaleAllBlocks ? textScale : 1
   return {
     prose: scaledTextStyle(13, 19, textScale),
-    heading: scaledTextStyle(14, 20, textScale),
-    headingLarge: scaledTextStyle(15, 21, textScale),
-    quote: scaledTextStyle(13, 19, textScale),
-    codeLanguage: scaledTextStyle(10, undefined, textScale),
-    codeText: scaledTextStyle(12, 17, textScale),
-    imageCaption: scaledTextStyle(11, undefined, textScale),
-    tableCell: scaledTextStyle(12, 17, textScale),
-    tableTruncated: scaledTextStyle(12, undefined, textScale),
-    listMarker: scaledTextStyle(13, 19, textScale),
-    list: scaledTextStyle(13, 19, textScale)
+    heading: scaledTextStyle(14, 20, other),
+    headingLarge: scaledTextStyle(15, 21, other),
+    quote: scaledTextStyle(13, 19, other),
+    codeLanguage: scaledTextStyle(10, undefined, other),
+    codeText: scaledTextStyle(12, 17, other),
+    imageCaption: scaledTextStyle(11, undefined, other),
+    tableCell: scaledTextStyle(12, 17, other),
+    tableTruncated: scaledTextStyle(12, undefined, other),
+    listMarker: scaledTextStyle(13, 19, other),
+    list: scaledTextStyle(14, 20, textScale)
   }
 }

@@ -119,7 +119,7 @@ export function MobileFileMarkdownPreview({
           <GestureDetector gesture={pinchGesture}>
             <ScrollView style={styles.scroll} contentContainerStyle={styles.markdownContent}>
               {truncated ? <MobileFilePreviewTruncatedNote byteLength={byteLength} /> : null}
-              <MobileMarkdown content={content} textScale={textScale} />
+              <MobileMarkdown content={content} textScale={textScale} scaleAllBlocks />
             </ScrollView>
           </GestureDetector>
         </GestureHandlerRootView>
