@@ -201,7 +201,7 @@ export function MobileNativeChatQuestion({
           >
             <ArrowUp
               size={18}
-              color={canSendFreeText ? colors.bgBase : colors.textMuted}
+              color={canSendFreeText ? colors.onFill : colors.textMuted}
               strokeWidth={2.6}
             />
           </Pressable>
