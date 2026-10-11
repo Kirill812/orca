@@ -87,7 +87,7 @@ describe('MobileRichMarkdownEditor', () => {
     act(() => {
       renderer = create(createElement(MobileRichMarkdownEditor, { ...props, textScale: 1.5 }))
     })
-    const webView = renderer!.root.findByType('WebView' as never)
+    const webView = renderer!.root.find((node) => String(node.type) === 'WebView')
     act(() => {
       webView.props.onMessage({ nativeEvent: { data: JSON.stringify({ type: 'ready' }) } })
     })

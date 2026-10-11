@@ -147,13 +147,15 @@ describe('MobileFileMarkdownPreview', () => {
         .find((node) => node.props.accessibilityLabel === 'Markdown text size')
 
     expect(findTextSizeButton()).toBeDefined()
-    const picker = renderer.root.findByType('PickerModal' as never)
+    const picker = renderer.root.find((node) => String(node.type) === 'PickerModal')
     expect(picker.props.visible).toBe(false)
 
     await act(async () => {
       findTextSizeButton()!.props.onPress()
     })
-    expect(renderer.root.findByType('PickerModal' as never).props.visible).toBe(true)
+    expect(renderer.root.find((node) => String(node.type) === 'PickerModal').props.visible).toBe(
+      true
+    )
 
     await selectMode(renderer, 'View Markdown source')
     expect(findTextSizeButton()).toBeUndefined()

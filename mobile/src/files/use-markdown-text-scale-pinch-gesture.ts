@@ -57,6 +57,5 @@ export function useMarkdownTextScalePinchGesture(
         onCommit(snapped)
       })
     return combineWithNativeScroll ? Gesture.Simultaneous(Gesture.Native(), pinch) : pinch
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onLiveScale, onCommit, combineWithNativeScroll])
 }

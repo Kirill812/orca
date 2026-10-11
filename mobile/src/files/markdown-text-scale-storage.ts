@@ -11,9 +11,7 @@ export async function loadMarkdownTextScale(): Promise<number> {
       return DEFAULT_MARKDOWN_TEXT_SCALE
     }
     const parsed = Number(raw)
-    return (MARKDOWN_TEXT_SCALES as readonly number[]).includes(parsed)
-      ? parsed
-      : DEFAULT_MARKDOWN_TEXT_SCALE
+    return MARKDOWN_TEXT_SCALES.find((preset) => preset === parsed) ?? DEFAULT_MARKDOWN_TEXT_SCALE
   } catch {
     return DEFAULT_MARKDOWN_TEXT_SCALE
   }
