@@ -71,25 +71,48 @@ export default function NativeChatSettingsScreen({
   // Why 'toggle': it is the desktop's default; showing "Hold" before the real value loads invited
   // flipping the desktop into hold mode by mistake, where a tap starts and instantly cancels.
   const [dictationMode, setDictationMode] = useState<DictationModeValue>('toggle')
+  const [voiceError, setVoiceError] = useState<string | null>(null)
+
+  const applySetupMode = (mode: string) => {
+    if (mode === 'toggle' || mode === 'hold') {
+      setDictationMode(mode)
+    }
+  }
 
   useEffect(() => {
     let active = true
     if (!voiceOperations) {
       return
     }
-    void voiceOperations.load().then((setup) => {
-      if (active && (setup.dictationMode === 'toggle' || setup.dictationMode === 'hold')) {
-        setDictationMode(setup.dictationMode)
-      }
-    })
+    voiceOperations
+      .load()
+      .then((setup) => {
+        if (active) {
+          applySetupMode(setup.dictationMode)
+        }
+      })
+      .catch((err: unknown) => {
+        if (active) {
+          setVoiceError(err instanceof Error ? err.message : 'Could not load voice settings')
+        }
+      })
     return () => {
       active = false
     }
   }, [voiceOperations])
 
   const handleBehaviourSelect = (value: DictationModeValue) => {
+    const previous = dictationMode
     setDictationMode(value)
-    void voiceOperations?.configure({ dictationMode: value })
+    setVoiceError(null)
+    voiceOperations
+      ?.configure({ dictationMode: value })
+      .then((setup) => applySetupMode(setup.dictationMode))
+      .catch((err: unknown) => {
+        // Revert the optimistic value so the row never shows a mode the host didn't accept.
+        setDictationMode(previous)
+        setVoiceError(err instanceof Error ? err.message : 'Could not update')
+      })
   }
 
   return (
@@ -217,6 +240,7 @@ export default function NativeChatSettingsScreen({
             />
           </View>
         </View>
+        {voiceError ? <Text style={styles.errorText}>{voiceError}</Text> : null}
       </ScrollView>
 
       <PickerModal<VoiceButtonSizeOptionValue>
@@ -323,6 +347,12 @@ const styles = StyleSheet.create({
   rowDivider: {
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.borderSubtle
+  },
+  errorText: {
+    fontSize: typography.bodySize - 2,
+    color: colors.destructive,
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.xs
   },
   rowLabelDisabled: {
     color: colors.textMuted
