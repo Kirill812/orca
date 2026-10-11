@@ -221,6 +221,7 @@ export default function NativeChatSettingsScreen({
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </Pressable>
+          {voiceError ? <Text style={styles.errorText}>{voiceError}</Text> : null}
           <View style={[styles.row, styles.rowDivider]}>
             <View style={styles.rowContent}>
               <Text style={styles.rowLabel}>Send automatically</Text>
@@ -238,7 +239,6 @@ export default function NativeChatSettingsScreen({
             />
           </View>
         </View>
-        {voiceError ? <Text style={styles.errorText}>{voiceError}</Text> : null}
       </ScrollView>
 
       <PickerModal
