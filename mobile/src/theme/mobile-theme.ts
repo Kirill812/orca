@@ -2,6 +2,7 @@
 // palette for light-mode devices (and e-ink readers, where a dark UI is unusable).
 // All screen files should import from here instead of using inline hex values.
 
+import './boot-globals'
 import {
   darkColors,
   highContrastDarkColors,
@@ -14,12 +15,11 @@ export { darkColors, highContrastDarkColors, highContrastLightColors, lightColor
 // Why a global instead of importing Appearance here: this module is also bundled into the
 // terminal WebView document script, where react-native does not exist. appearance-boot.ts
 // sets it before any screen module evaluates, and there it falls back to dark.
-// ponytail: scheme is fixed per app launch (StyleSheets are built at import time); switching
+// The scheme is fixed per app launch (StyleSheets are built at import time), so switching
 // the OS theme applies on the next cold start.
-const boot = globalThis as { __orcaColorScheme?: string; __orcaHighContrast?: boolean }
 
-export const isLightTheme = boot.__orcaColorScheme === 'light'
-export const isHighContrast = boot.__orcaHighContrast === true
+export const isLightTheme = globalThis.__orcaColorScheme === 'light'
+export const isHighContrast = globalThis.__orcaHighContrast === true
 
 export const colors = isHighContrast
   ? isLightTheme

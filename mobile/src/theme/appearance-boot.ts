@@ -1,4 +1,5 @@
 import { Appearance, StyleSheet } from 'react-native'
+import './boot-globals'
 import { readAppearancePrefs } from './appearance-prefs'
 import { outlineFilledButtons } from './high-contrast-outline'
 import { highContrastDarkColors, highContrastLightColors } from './palettes'
@@ -10,21 +11,24 @@ import { scaleTextStyles } from './scale-text-styles'
 // Both therefore apply from the next app launch, which Settings → Display says.
 const prefs = readAppearancePrefs()
 
-const boot = globalThis as { __orcaColorScheme?: string; __orcaHighContrast?: boolean }
-boot.__orcaColorScheme =
+globalThis.__orcaColorScheme =
   prefs.theme === 'system' ? (Appearance.getColorScheme() ?? 'dark') : prefs.theme
-boot.__orcaHighContrast = prefs.contrast === 'high'
+globalThis.__orcaHighContrast = prefs.contrast === 'high'
 
 const outlinePalette =
-  boot.__orcaColorScheme === 'light' ? highContrastLightColors : highContrastDarkColors
+  globalThis.__orcaColorScheme === 'light' ? highContrastLightColors : highContrastDarkColors
 
-if (prefs.textScale !== 1 || boot.__orcaHighContrast) {
-  // ponytail: covers styles built with StyleSheet.create (nearly all of them); inline style
+if (prefs.textScale !== 1 || globalThis.__orcaHighContrast) {
+  // This covers styles built with StyleSheet.create (nearly all of them); inline style
   // literals keep their size and fill. Text size stacks with the Android/iOS system font size.
   const create = StyleSheet.create
+  // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the wrapper returns create()'s result for the same input shape; only text sizes and button fills change.
   StyleSheet.create = ((styles) => {
+    if (styles === null || styles === undefined) {
+      return create(styles)
+    }
     let next = scaleTextStyles(styles, prefs.textScale)
-    if (boot.__orcaHighContrast) {
+    if (globalThis.__orcaHighContrast) {
       next = outlineFilledButtons(next, outlinePalette)
     }
     return create(next)

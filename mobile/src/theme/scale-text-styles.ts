@@ -1,5 +1,10 @@
 type StyleMap = Record<string, unknown>
 
+// Plain style objects only: arrays (composed styles) and primitives are left alone.
+function isStyleMap(value: unknown): value is StyleMap {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
 /**
  * Multiplies every numeric fontSize and lineHeight in a StyleSheet.create() input by `scale`.
  * When text grows, a fixed `height` becomes a `minHeight` so rows, tabs and pills grow with their
@@ -12,14 +17,15 @@ export function scaleTextStyles<T extends StyleMap>(styles: T, scale: number): T
   }
   const scaled: StyleMap = {}
   for (const [name, style] of Object.entries(styles)) {
-    if (style === null || typeof style !== 'object') {
+    if (!isStyleMap(style)) {
       scaled[name] = style
       continue
     }
-    const next: StyleMap = { ...(style as StyleMap) }
+    const next: StyleMap = { ...style }
     for (const key of ['fontSize', 'lineHeight']) {
-      if (typeof next[key] === 'number') {
-        next[key] = Math.round((next[key] as number) * scale * 2) / 2
+      const value = next[key]
+      if (typeof value === 'number') {
+        next[key] = Math.round(value * scale * 2) / 2
       }
     }
     const height = next.height
@@ -33,5 +39,6 @@ export function scaleTextStyles<T extends StyleMap>(styles: T, scale: number): T
     }
     scaled[name] = next
   }
+  // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: scaled has exactly the keys of styles, each value either untouched or the same style object with numbers rescaled.
   return scaled as T
 }

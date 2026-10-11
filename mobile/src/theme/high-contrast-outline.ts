@@ -1,5 +1,9 @@
 type StyleMap = Record<string, unknown>
 
+function isStyleMap(value: unknown): value is StyleMap {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
 export type OutlinePalette = {
   textPrimary: string
   surfaceBright: string
@@ -28,13 +32,12 @@ export function outlineFilledButtons<T extends StyleMap>(styles: T, palette: Out
   const filled = new Set([...strong, palette.statusRed, palette.bgRaised])
   const outlined: StyleMap = {}
   for (const [name, style] of Object.entries(styles)) {
-    const background =
-      style !== null && typeof style === 'object' ? (style as StyleMap).backgroundColor : undefined
-    if (typeof background !== 'string' || !filled.has(background)) {
+    const background = isStyleMap(style) ? style.backgroundColor : undefined
+    if (!isStyleMap(style) || typeof background !== 'string' || !filled.has(background)) {
       outlined[name] = style
       continue
     }
-    const next: StyleMap = { ...(style as StyleMap), backgroundColor: 'transparent' }
+    const next: StyleMap = { ...style, backgroundColor: 'transparent' }
     if (!PRESS_STATE.test(name)) {
       const current = typeof next.borderWidth === 'number' ? next.borderWidth : 0
       next.borderWidth = Math.max(current, strong.has(background) ? 2 : 1)
@@ -42,5 +45,6 @@ export function outlineFilledButtons<T extends StyleMap>(styles: T, palette: Out
     }
     outlined[name] = next
   }
+  // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: outlined has exactly the keys of styles; only fill/border props of button styles change.
   return outlined as T
 }

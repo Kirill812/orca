@@ -13,15 +13,21 @@ export const DEFAULT_APPEARANCE_PREFS: AppearancePrefs = {
   textScale: 1
 }
 
+function isTextScale(value: unknown): value is AppearancePrefs['textScale'] {
+  return TEXT_SCALES.some((scale) => scale === value)
+}
+
 export function parseAppearancePrefs(raw: string | null): AppearancePrefs {
   try {
-    const parsed = JSON.parse(raw ?? '{}') as Partial<AppearancePrefs>
+    const parsed: unknown = JSON.parse(raw ?? '{}')
+    const field = (key: string): unknown =>
+      typeof parsed === 'object' && parsed !== null ? Reflect.get(parsed, key) : undefined
+    const theme = field('theme')
+    const textScale = field('textScale')
     return {
-      theme: parsed.theme === 'light' || parsed.theme === 'dark' ? parsed.theme : 'system',
-      contrast: parsed.contrast === 'high' ? 'high' : 'normal',
-      textScale: (TEXT_SCALES as readonly number[]).includes(parsed.textScale as number)
-        ? (parsed.textScale as number)
-        : 1
+      theme: theme === 'light' || theme === 'dark' ? theme : 'system',
+      contrast: field('contrast') === 'high' ? 'high' : 'normal',
+      textScale: isTextScale(textScale) ? textScale : 1
     }
   } catch {
     return DEFAULT_APPEARANCE_PREFS
