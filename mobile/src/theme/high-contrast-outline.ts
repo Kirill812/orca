@@ -9,13 +9,15 @@ export type OutlinePalette = {
   surfaceBright: string
   accentBlue: string
   mergeGreen: string
+  statusGreen: string
   statusRed: string
   bgRaised: string
 }
 
-// Why skip borders on pressed/active variants: they are merged over a base style, so adding a
-// border there would shift the layout on every press; they just lose their fill.
-const PRESS_STATE = /pressed|active/i
+// Why skip borders on pressed variants: they are merged over a base style, so adding a border
+// there would shift the layout on every press; they just lose their fill. `*Active` styles mean
+// "selected", so they are outlined like any strong fill and keep a visible indicator.
+const PRESS_STATE = /pressed/i
 
 /**
  * High contrast (e-ink): turns every filled button style into an outlined one. A solid fill costs
@@ -29,7 +31,10 @@ export function outlineFilledButtons<T extends StyleMap>(styles: T, palette: Out
     palette.accentBlue,
     palette.mergeGreen
   ])
-  const filled = new Set([...strong, palette.statusRed, palette.bgRaised])
+  // Status fills keep their own colour as the border; a green fill left in place would put the
+  // on-colour (check icons, "Done" labels) on a background it cannot reach 4.5:1 against.
+  const status = new Set([palette.statusRed, palette.statusGreen])
+  const filled = new Set([...strong, ...status, palette.bgRaised])
   const outlined: StyleMap = {}
   for (const [name, style] of Object.entries(styles)) {
     const background = isStyleMap(style) ? style.backgroundColor : undefined
@@ -40,8 +45,9 @@ export function outlineFilledButtons<T extends StyleMap>(styles: T, palette: Out
     const next: StyleMap = { ...style, backgroundColor: 'transparent' }
     if (!PRESS_STATE.test(name)) {
       const current = typeof next.borderWidth === 'number' ? next.borderWidth : 0
-      next.borderWidth = Math.max(current, strong.has(background) ? 2 : 1)
-      next.borderColor = background === palette.statusRed ? palette.statusRed : palette.textPrimary
+      const thick = strong.has(background) || background === palette.statusGreen
+      next.borderWidth = Math.max(current, thick ? 2 : 1)
+      next.borderColor = status.has(background) ? background : palette.textPrimary
     }
     outlined[name] = next
   }
