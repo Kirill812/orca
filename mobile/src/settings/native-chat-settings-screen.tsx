@@ -228,7 +228,8 @@ export default function NativeChatSettingsScreen({
             <View style={styles.rowContent}>
               <Text style={styles.rowLabel}>Send automatically</Text>
               <Text style={styles.rowSublabel}>
-                Submit the recognised text as soon as dictation finishes, without pressing Send.
+                Applies to any dictation, floating or input-bar mic: submit the text as soon as it
+                finishes, without pressing Send.
               </Text>
             </View>
             <Switch
